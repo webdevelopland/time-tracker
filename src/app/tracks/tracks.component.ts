@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Observable, zip } from 'rxjs';
+import { Observable, zip, Subscription } from 'rxjs';
 
 import { Track } from '@/core/interfaces';
 import { FirebaseService } from '@/core/services';
@@ -34,7 +34,8 @@ export class TracksComponent {
   }
 
   load(): void {
-    this.firebaseService.getTracks().subscribe(tracks => {
+    const sub: Subscription = this.firebaseService.getTracks().subscribe(tracks => {
+      sub.unsubscribe();
       this.projectMap = {};
       this.tracks = tracks.filter(track => track.user === this.firebaseService.user);
       for (const track of this.tracks) {
