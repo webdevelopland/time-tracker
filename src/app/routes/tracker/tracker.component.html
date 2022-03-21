@@ -1,0 +1,30 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header panel">
+    <a class="active-button" [routerLink]="['/menu']">Back</a>
+    <div class="center">
+      <div class="time">{{ bubbleTime }}</div>
+      <div class="status">Today</div>
+    </div>
+    <div class="active-button" (click)="createNewBubble()">Next</div>
+  </div>
+  <div class="body">
+    <div class="flex">
+      <div class="label">{{ label }}</div>
+      <div class="time">{{ sessionTime }}</div>
+      <div class="stopped button" *ngIf="!isTracking" (click)="toggle()">
+        <mat-icon>play_arrow</mat-icon>
+      </div>
+      <div class="playing button" *ngIf="isTracking" (click)="toggle()">
+        <mat-icon>pause</mat-icon>
+      </div>
+    </div>
+  </div>
+  <div class="footer panel">
+    <div class="duration" (click)="tmp()">{{ milestoneDuration }}</div>
+    <div class="center">
+      <div class="status" [ngClass]="statusStyle">{{ status }}%</div>
+      <div class="time">{{ milestoneTime }}</div>
+    </div>
+    <div class="active-button" (click)="askToEnd()">End</div>
+  </div>
+</div>

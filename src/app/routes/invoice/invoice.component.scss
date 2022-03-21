@@ -1,0 +1,91 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 15px;
+  >.panel {
+    display: flex;
+    justify-content: space-between;
+    >.active-button {
+      display: block;
+      padding: 6px 20px;
+      box-sizing: border-box;
+    }
+  }
+  >.header {
+    align-items: flex-start;
+  }
+  >.footer {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    width: calc(100% - 20px);
+    align-items: flex-end;
+  }
+  >.invoice {
+    margin-top: 20px;
+    background: white;
+    border-radius: 6px;
+    color: #333;
+    padding: 20px 30px;
+    box-sizing: border-box;
+    max-width: 675px;
+    >.header {
+      display: flex;
+      justify-content: space-between;
+      >.about {
+        >.title {
+          margin-top: 15px;
+          font-size: 40px;
+          text-transform: capitalize;
+          margin-bottom: 20px;
+        }
+        >.card {
+          margin-bottom: 10px;
+          label {
+            width: 100px;
+          }
+        }
+      }
+      >.name {
+        >.logo {
+          display: flex;
+          justify-content: flex-end;
+          img {
+            width: 70px;
+            height: 70px;
+          }
+        }
+        >.card {
+          margin-top: 10px;
+          label {
+            width: 50px;
+          }
+        }
+      }
+    }
+    >.body {
+      border-top: 2px solid #d81313;
+      padding-left: 50px;
+      >.card {
+        margin-top: 10px;
+        label {
+          width: 100px;
+        }
+      }
+      >.ltc {
+        margin-top: 20px;
+      }
+    }
+    >.footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 30px;
+    }
+    .card {
+      display: flex;
+    }
+  }
+}

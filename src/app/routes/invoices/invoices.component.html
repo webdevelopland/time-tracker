@@ -1,0 +1,17 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header">
+    <a class="active-button" [routerLink]="['/menu']">Back</a>
+    <div class="active-button" (click)="toggle()">
+      <span *ngIf="!isFilterPaid">Paid</span>
+      <span *ngIf="isFilterPaid">Unpaid</span>
+    </div>
+  </div>
+  <div class="list">
+    <a class="invoice" *ngFor="let invoice of invoices" [routerLink]="['/invoice/' + invoice.id]">
+      <div class="date">{{ invoice.timestamp | date:'dd/MM/yyyy' }}</div>
+      <div class="placeholder"></div>
+      <mat-icon *ngIf="invoice.isPaid">done</mat-icon>
+      <div class="total">{{ invoice.totalPrice }}$</div>
+    </a>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="row">
+    <input type="number" placeholder="Limit" [(ngModel)]="limit">
+  </div>
+  <div class="row">
+    <input type="number" placeholder="Rate" [(ngModel)]="rate">
+  </div>
+  <div class="row">
+    <input
+      type="text"
+      placeholder="LTC address"
+      [(ngModel)]="address"
+      spellcheck=false
+    >
+  </div>
+  <div class="row">
+    <input
+      type="text"
+      placeholder="Name"
+      [(ngModel)]="name"
+      spellcheck=false
+    >
+  </div>
+  <div class="row">
+    <input
+      type="text"
+      placeholder="Bill To"
+      [(ngModel)]="billTo"
+      spellcheck=false
+    >
+  </div>
+  <div class="row">
+    <button class="active-button" (click)="save()">
+      Save
+    </button>
+  </div>
+  <div class="back">
+    <a class="active-button" [routerLink]="['/menu']">
+      Back
+    </a>
+  </div>
+</div>

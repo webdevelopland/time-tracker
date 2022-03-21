@@ -1,105 +1,136 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  AngularFirestore,
-  AngularFirestoreCollection,
-} from 'angularfire2/firestore';
-import { AngularFireAuth } from 'angularfire2/auth';
-import * as firebase from 'firebase/app';
 
-import { User, Track } from '@/core/interfaces';
+import * as Proto from 'src/proto';
+import { EncodingService } from './encoding.service';
+import { AuthService } from './auth.service';
+
+interface FirebaseElement {
+  proto: string;
+}
 
 @Injectable()
 export class FirebaseService {
-  online = false;
-  user: string;
-  private tracks: AngularFirestoreCollection<Track>;
-  private users: AngularFirestoreCollection<User>;
-
   constructor(
-    public angularFirestore: AngularFirestore,
-    public angularFireAuth: AngularFireAuth,
-    public router: Router,
-  ) {
-    this.angularFireAuth.authState.subscribe(userData => {
-      this.online = !!userData;
-      if (!this.online) {
-        this.router.navigate(['/login']);
-      } else {
-        this.user = userData.email;
-        this.router.navigate(['/tracks']);
-      }
-    });
+    private db: AngularFirestore,
+    private encodingService: EncodingService,
+    private authService: AuthService,
+  ) { }
 
-    this.tracks = this.angularFirestore.collection('tracks');
-    this.users = this.angularFirestore.collection('users');
-  }
-
-  getTracks(): Observable<Track[]> {
-    return this.tracks
+  getInvoiceList(): Observable<Proto.Invoice[]> {
+    return this.db.collection('/invoices')
       .snapshotChanges()
       .pipe(
-        map(actions => {
-          return actions.map(action => {
-            const track: Track = action.payload.doc.data();
-            track.id = action.payload.doc.id;
-            return track;
-          });
-        })
+        map(action => action.map(a => {
+          const firebaseElement = a.payload.doc.data() as FirebaseElement;
+          return Proto.Invoice.deserializeBinary(
+            this.encodingService.base64ToUint8Array(firebaseElement.proto)
+          );
+        })),
       );
   }
 
-  getUsers(): Observable<User[]> {
-    return this.users
+  getInvoice(id: string): Observable<Proto.Invoice> {
+    return this.db.collection('/invoices')
+      .doc(id)
       .snapshotChanges()
       .pipe(
-        map(actions => {
-          return actions.map(action => {
-            const user: User = action.payload.doc.data();
-            return user;
-          });
-        })
+        map(action => {
+          const firebaseElement = action.payload.data() as FirebaseElement;
+          if (firebaseElement && firebaseElement.proto) {
+            return Proto.Invoice.deserializeBinary(
+              this.encodingService.base64ToUint8Array(firebaseElement.proto)
+            );
+          } else {
+            return;
+          }
+        }),
       );
   }
 
-  addTrack(track: Track): Observable<void> {
+  setInvoice(invoice: Proto.Invoice): Observable<void> {
     return new Observable(observer => {
-      this.tracks
-        .add(track)
-        .then(result => {
-          // Accessed
-          observer.next();
+      this.db.collection('/invoices')
+        .doc(invoice.getId())
+        .set({
+          proto: this.encodingService.uint8ArrayToBase64(invoice.serializeBinary()),
         })
-        .catch(() => {
-          // Permission denied
-          // observer.error();
-        });
+        .then(() => observer.next())
+        .catch(() => observer.error());
     });
   }
 
-  removeTrack(id: string): Observable<void> {
+  setSettings(settings: Proto.Settings): Observable<void> {
     return new Observable(observer => {
-      this.tracks
-        .doc(id)
-        .delete()
-        .then(() => {
-          // Accessed
-          observer.next();
+      this.db.collection('/settings')
+        .doc('settings')
+        .set({
+          proto: this.encodingService.uint8ArrayToBase64(settings.serializeBinary()),
         })
-        .catch(() => {
-          // Permission denied
-          // observer.error();
-        });
+        .then(() => observer.next())
+        .catch(() => observer.error());
     });
   }
 
-  login(): Promise<any> {
-    return this.angularFireAuth.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  getSettings(): Observable<Proto.Settings> {
+    return this.db.collection('/settings')
+      .doc('settings')
+      .snapshotChanges()
+      .pipe(
+        map(action => {
+          const firebaseElement = action.payload.data() as FirebaseElement;
+          if (firebaseElement && firebaseElement.proto) {
+            return Proto.Settings.deserializeBinary(
+              this.encodingService.base64ToUint8Array(firebaseElement.proto)
+            );
+          } else {
+            return;
+          }
+        }),
+      );
   }
 
-  logout(): void {
-    this.angularFireAuth.auth.signOut();
+  setMilestone(milestone: Proto.Milestone): Observable<void> {
+    return new Observable(observer => {
+      this.db.collection('/milestone')
+        .doc('current')
+        .set({
+          proto: this.encodingService.uint8ArrayToBase64(milestone.serializeBinary()),
+        })
+        .then(() => observer.next())
+        .catch(() => observer.error());
+    });
+  }
+
+  saveMilestone(milestone: Proto.Milestone): Observable<void> {
+    return new Observable(observer => {
+      this.db.collection('/milestones')
+        .doc(milestone.getId())
+        .set({
+          proto: this.encodingService.uint8ArrayToBase64(milestone.serializeBinary()),
+        })
+        .then(() => observer.next())
+        .catch(() => observer.error());
+    });
+  }
+
+  getMilestone(): Observable<Proto.Milestone> {
+    return this.db.collection('/milestone')
+      .doc('current')
+      .snapshotChanges()
+      .pipe(
+        map(action => {
+          const firebaseElement = action.payload.data() as FirebaseElement;
+          if (firebaseElement && firebaseElement.proto) {
+            return Proto.Milestone.deserializeBinary(
+              this.encodingService.base64ToUint8Array(firebaseElement.proto)
+            );
+          } else {
+            return;
+          }
+        }),
+      );
   }
 }

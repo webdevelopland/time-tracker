@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package wakka.common.settings;
+
+message Settings {
+  int32 limit = 1; // Hours per 7 days
+  string wallet = 2;
+  float rate = 3; // $ per hour
+  string name = 4;
+  string bill_to = 5;
+}

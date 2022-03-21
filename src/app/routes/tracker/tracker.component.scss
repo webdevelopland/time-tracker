@@ -1,0 +1,123 @@
+@import 'styles/variables';
+
+.page {
+  display: flex;
+  flex-direction: column;
+  >.panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
+    >.active-button {
+      display: block;
+      padding: 6px 20px;
+      box-sizing: border-box;
+    }
+  }
+  >.header {
+    align-items: flex-start;
+    >.center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      >.time {
+        color: white;
+        font-size: 30px;
+      }
+      >.status {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+    }
+  }
+  >.body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    >.flex {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 400px;
+      max-width: 90%;
+      >.label {
+        margin-bottom: 5px;
+        font-size: 20px;
+        height: 23px;
+      }
+      >.time {
+        margin-bottom: 10px;
+        font-size: 40px;
+        height: 45px;
+      }
+      >.playing {
+        background: #6fda44;
+        color: white;
+      }
+      >.stopped {
+        background: #656565;
+        color: white;
+      }
+      >.button {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        height: 80px;
+        width: 100%;
+        >mat-icon {
+          font-size: 60px;
+          width: auto;
+          height: auto;
+        }
+      }
+    }
+  }
+  >.footer {
+    align-items: flex-end;
+    >.duration {
+      color: white;
+      font-size: 30px;
+    }
+    >.center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      >.status {
+        margin-bottom: 5px;
+        text-align: center;
+        border-radius: 8px;
+        padding: 2px 6px;
+        &.slow {
+          background: white;
+          color: #111;
+        }
+        &.slack {
+          background: #bdfeff;
+          color: #111;
+        }
+        &.success {
+          background: #6fda44;
+          color: white;
+        }
+        &.warning {
+          background: #f4bf0c;
+          color: #111;
+        }
+        &.overlimit {
+          background: #d81313;
+          color: white;
+        }
+        &.new {
+          display: none;
+        }
+      }
+      >.time {
+        color: white;
+        font-size: 30px;
+      }
+    }
+  }
+}
