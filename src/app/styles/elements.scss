@@ -1,0 +1,40 @@
+@import './buttons';
+
+body {
+  @mixin input() {
+    padding: 4px 10px 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    outline: none;
+    border: none;
+    font-family: $default-font;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: white;
+  }
+  input {
+    @include input();
+  }
+  select {
+    @include input();
+    border: 1px solid #ccc !important;
+  }
+  textarea {
+    @include input();
+    resize: none;
+  }
+  .context-dialog {
+    >.mat-dialog-container {
+      padding: 0;
+    }
+  }
+  // Hide number arrows
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+}

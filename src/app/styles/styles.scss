@@ -1,0 +1,20 @@
+@import './material';
+@import './variables';
+@import './settings';
+@import './elements';
+@import './notifications';
+
+html {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  height: 100%;
+  body {
+    margin: 0;
+    font-family: $default-font;
+    background: #3498db;
+    color: white;
+    height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+  }
+}

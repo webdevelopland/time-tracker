@@ -1,17 +1,40 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 
-import { LoginComponent } from './login';
-import { TracksComponent } from './tracks';
+import {
+  LoginComponent,
+  MenuComponent,
+  TrackerComponent,
+  SettingsComponent,
+  InvoiceComponent,
+  InvoicesComponent,
+} from '@/routes';
+import { AuthGuard } from '@/core/services';
 
-const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'tracks', component: TracksComponent },
+const appRoutes: Routes = [
+  { path: '', component: LoginComponent },
+  {
+    path: '',
+    canActivate: [AuthGuard],
+    children: [
+      { path: 'menu', component: MenuComponent },
+      { path: 'tracker', component: TrackerComponent },
+      { path: 'settings', component: SettingsComponent },
+      { path: 'invoice/:id', component: InvoiceComponent },
+      { path: 'invoices', component: InvoicesComponent },
+    ],
+  },
   { path: '**', component: LoginComponent },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  imports: [
+    CommonModule,
+    RouterModule.forRoot(appRoutes),
+  ],
+  exports: [
+    RouterModule,
+  ],
 })
 export class AppRoutingModule { }

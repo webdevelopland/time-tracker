@@ -1,0 +1,86 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header panel">
+    <a class="active-button" [routerLink]="['/invoices']">Back</a>
+    <div class="active-button" (click)="download()" *ngIf="isSent">Download</div>
+  </div>
+  <div class="invoice">
+    <div class="header">
+      <div class="about">
+        <div class="title">invoice</div>
+        <div class="card">
+          <label>Invoice #:</label>
+          <div class="value">{{ invoice.id }}</div>
+        </div>
+        <div class="card">
+          <label>Description:</label>
+          <div class="value">Web Development</div>
+        </div>
+      </div>
+      <div class="name">
+        <div class="logo">
+          <img src="/assets/webdevelopland.png">
+        </div>
+        <div class="card">
+          <label>From:</label>
+          <div class="value">{{ invoice.from }}</div>
+        </div>
+        <div class="card">
+          <label>Bill to:</label>
+          <div class="value">{{ invoice.billTo }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="card">
+        <label>Milestone:</label>
+        <div class="value">
+          {{ invoice.started | date:'dd/MM/yyyy' }} - {{ invoice.ended | date:'dd/MM/yyyy' }}
+        </div>
+      </div>
+      <div class="card">
+        <label>Duration:</label>
+        <div class="value">
+          {{ invoice.duration }} hrs
+        </div>
+      </div>
+      <div class="card">
+        <label>Rate:</label>
+        <div class="value">
+          {{ invoice.rate }}$ per hour
+        </div>
+      </div>
+      <div class="card">
+        <label>Total USD:</label>
+        <div class="value">
+          {{ invoice.totalUsd }}$
+        </div>
+      </div>
+      <div class="card ltc">
+        <label>Litecoin price:</label>
+        <div class="value" *ngIf="!isLoading">
+          {{ litecoinPrice }}$
+        </div>
+        <mat-spinner [diameter]="17" *ngIf="isLoading" color="accent"></mat-spinner>
+      </div>
+      <div class="card">
+        <label>TOTAL:</label>
+        <div class="value" *ngIf="!isLoading">
+          {{ total }} LTC
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="reminder">
+        <div class="line">Send to: {{ invoice.address }}</div>
+        <div class="line">before {{ invoice.before | date:'dd/MM/yyyy' }}</div>
+      </div>
+      <div class="sent" *ngIf="isSent">
+        Sent: {{ sent | date:'HH:mm dd/MM/yyyy' }}
+      </div>
+    </div>
+  </div>
+  <div class="footer panel" *ngIf="!isSent">
+    <div class="active-button" (click)="calculate()">Calculate</div>
+    <div class="active-button" (click)="pay()">Pay</div>
+  </div>
+</div>
