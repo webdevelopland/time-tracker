@@ -1,7 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription, interval, zip } from 'rxjs';
-import { rand, randstr64, randCustomString, numerals } from 'rndmjs';
+import { randstr64, randCustomString, numerals } from 'rndmjs';
 
 import * as Proto from 'src/proto';
 import { timestampToTime, timestampToFullTime, Timer, timestampToDays } from '@/core/functions';

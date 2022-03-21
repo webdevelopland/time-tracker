@@ -163,7 +163,7 @@ export class InvoiceComponent implements OnDestroy {
     period += ' - ' + timestampToDate(this.invoice.ended);
     doc.text(period, 182, 180);
     doc.text('Duration:', 82, 207);
-    doc.text(this.invoice.duration + 'hrs', 182, 207);
+    doc.text(this.invoice.duration + ' hrs', 182, 207);
     doc.text('Rate:', 82, 234);
     doc.text(this.invoice.rate + '$ per hour', 182, 234);
     doc.text('Total USD:', 82, 261);
