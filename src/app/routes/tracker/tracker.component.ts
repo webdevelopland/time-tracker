@@ -1,7 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription, interval, zip } from 'rxjs';
-import { rand, randstr64, randCustomString, numerals } from 'rndmjs';
+import { randstr64, randCustomString, numerals } from 'rndmjs';
 
 import * as Proto from 'src/proto';
 import { timestampToTime, timestampToFullTime, Timer, timestampToDays } from '@/core/functions';
@@ -182,49 +182,6 @@ export class TrackerComponent implements OnDestroy {
     this.breakTimer.savedMs = Date.now() - this.milestone.getBreakMs();
     this.breakTimer.start();
     this.label = 'Break';
-  }
-
-  tmp(): void {
-    this.isTracking = false;
-    this.stop();
-    this.mock();
-    this.save();
-  }
-
-  mock(): void {
-    this.milestone = new Proto.Milestone();
-    this.milestone.setId('W' + randCustomString(numerals, 13));
-    let moment = Date.now() - 1000 * 60 * 60 * rand(0, 24 * 10);
-    this.milestone.setStartedMs(moment);
-    let lastBubble: Proto.Bubble;
-    for (let i = 0; i < rand(3, 5); i++) {
-      const bubble = new Proto.Bubble();
-      bubble.setId(randstr64(15));
-      bubble.setStartedMs(moment);
-      const sessionN = rand(1, 10);
-      for (let i = 0; i < sessionN; i++) {
-        const session = new Proto.Session();
-        session.setId(randstr64(15));
-        session.setStartedMs(moment);
-        const sessionDuration = 1000 * 60 * rand(0, 9 / sessionN * 60);
-        moment += sessionDuration;
-        session.setEndedMs(moment);
-        this.milestone.setBreakMs(moment);
-        bubble.addSession(session);
-
-        const breakDuration = 1000 * 60 * rand(0, 60);
-        moment += breakDuration;
-      }
-      bubble.setEndedMs(moment);
-      this.milestone.addBubble(bubble);
-      lastBubble = bubble;
-      const pauseDuration = 1000 * 60 * rand(0, 10);
-      moment += pauseDuration;
-    }
-    lastBubble.setEndedMs(0);
-    this.bubble = lastBubble;
-    this.readMilestone();
-    this.save();
   }
 
   toggle(): void {
