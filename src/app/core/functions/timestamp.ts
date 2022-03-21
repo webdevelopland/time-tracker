@@ -11,7 +11,7 @@ interface TimestampDate {
   minutes: number;
   hours: number;
   day: number;
-  month: number;
+  month: string;
   year: number;
 }
 
@@ -31,7 +31,7 @@ function getTimestampDate(timestamp: number): TimestampDate {
     minutes: date.getMinutes(),
     hours: date.getHours(),
     day: date.getDate(),
-    month: date.getMonth() + 1,
+    month: date.toLocaleString('en-us', { month: 'short' }),
     year: date.getFullYear(),
   };
 }
@@ -55,26 +55,24 @@ export function timestampToFullTime(timestamp: number): string {
   return dateString;
 }
 
-// Date 25/07/2022
+// Date 25/Aug/2022
 export function timestampToDate(timestamp: number): string {
   const date: TimestampDate = getTimestampDate(timestamp);
   let dateString: string = '';
   dateString += addZero(date.day);
-  dateString += '/' + addZero(date.month);
+  dateString += '/' + date.month;
   dateString += '/' + date.year;
   return dateString;
 }
 
-// Date 17:34 25/07/2022
+// Date 17:34 25/Aug/2022
 export function timestampToTimeDate(timestamp: number): string {
   const date: TimestampDate = getTimestampDate(timestamp);
   let dateString: string = '';
   dateString += addZero(date.hours);
   dateString += ':' + addZero(date.minutes);
   dateString += ' ';
-  dateString += addZero(date.day);
-  dateString += '/' + addZero(date.month);
-  dateString += '/' + date.year;
+  dateString += timestampToDate(timestamp);
   return dateString;
 }
 

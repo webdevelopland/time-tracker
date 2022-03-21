@@ -1,11 +1,14 @@
 <div class="page" *ngIf="!loadingService.isLoading">
   <div class="row">
+    <label>Limit (hours per week)</label>
     <input type="number" placeholder="Limit" [(ngModel)]="limit">
   </div>
   <div class="row">
+    <label>Rate ($ per hour)</label>
     <input type="number" placeholder="Rate" [(ngModel)]="rate">
   </div>
   <div class="row">
+    <label>LTC address</label>
     <input
       type="text"
       placeholder="LTC address"
@@ -14,6 +17,7 @@
     >
   </div>
   <div class="row">
+    <label>Name</label>
     <input
       type="text"
       placeholder="Name"
@@ -22,6 +26,7 @@
     >
   </div>
   <div class="row">
+    <label>Bill To</label>
     <input
       type="text"
       placeholder="Bill To"
@@ -29,7 +34,7 @@
       spellcheck=false
     >
   </div>
-  <div class="row">
+  <div class="row button">
     <button class="active-button" (click)="save()">
       Save
     </button>
