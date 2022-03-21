@@ -1,4 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import * as Proto from 'src/proto';
@@ -25,9 +26,17 @@ export class InvoicesComponent implements OnDestroy {
   constructor(
     public loadingService: LoadingService,
     public firebaseService: FirebaseService,
+    public activatedRoute: ActivatedRoute,
+    public router: Router,
   ) {
     this.loadingService.isLoading = true;
     this.loadInvoiceList();
+    this.activatedRoute.queryParams.subscribe(params => {
+      if (params && params.tab) {
+        this.isFilterPaid = params.tab === 'paid';
+        this.display();
+      }
+    });
   }
 
   loadInvoiceList(): void {
@@ -53,9 +62,10 @@ export class InvoicesComponent implements OnDestroy {
       .map(invoice => {
         const HOUR: number = 1000 * 60 * 60;
         const hours: number = invoice.getDurationMs() / HOUR;
+        const time = invoice.getSignedMs() === 0 ? invoice.getEndedMs() : invoice.getSignedMs();
         return {
           id: invoice.getId(),
-          timestamp: invoice.getEndedMs(),
+          timestamp: time,
           totalPrice: Math.round(invoice.getRate() * hours),
           isPaid: invoice.getSignedMs() !== 0,
         };
@@ -64,7 +74,8 @@ export class InvoicesComponent implements OnDestroy {
 
   toggle(): void {
     this.isFilterPaid = !this.isFilterPaid;
-    this.display();
+    const tab: string = this.isFilterPaid ? 'paid' : 'unpaid';
+    this.router.navigate(['/invoices'], { queryParams: { tab: tab } });
   }
 
   ngOnDestroy() {

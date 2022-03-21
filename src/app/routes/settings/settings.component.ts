@@ -29,6 +29,7 @@ export class SettingsComponent implements OnDestroy {
 
   loadSettings(): void {
     this.getSub = this.firebaseService.getSettings().subscribe(settings => {
+      this.getSub.unsubscribe();
       if (settings) {
         this.limit = settings.getLimit();
         this.rate = settings.getRate();

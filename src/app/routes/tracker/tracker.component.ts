@@ -49,7 +49,6 @@ export class TrackerComponent implements OnDestroy {
   }
 
   loadMilestone(milestone: Proto.Milestone): void {
-    this.getSub.unsubscribe();
     if (milestone) {
       this.milestone = milestone;
       this.readMilestone();
@@ -57,7 +56,6 @@ export class TrackerComponent implements OnDestroy {
       this.createNewMilestone();
     }
     this.tick();
-
   }
 
   loadSettings(settings: Proto.Settings): void {

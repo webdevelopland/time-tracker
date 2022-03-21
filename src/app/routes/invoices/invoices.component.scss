@@ -6,12 +6,15 @@
   >.header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 20px;
     >.active-button {
       display: block;
       padding: 6px 20px;
       box-sizing: border-box;
+    }
+    >.tab {
+      font-size: 18px;
     }
   }
   >.list {
@@ -20,15 +23,17 @@
       background: white;
       border-radius: 6px;
       color: #333;
-      display: flex;
       padding: 10px;
       height: 24px;
       margin-bottom: 10px;
-      justify-content: space-between;
+      display: flex;
       align-items: center;
-      max-width: 300px;
+      max-width: 400px;
       cursor: pointer;
       text-decoration: none;
+      >.id {
+        width: 180px;
+      }
       >.placeholder {
         flex: 1;
       }

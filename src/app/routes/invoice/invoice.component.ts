@@ -9,12 +9,12 @@ import { LoadingService, FirebaseService } from '@/core/services';
 
 interface Invoice {
   id: string;
-  started: number;
-  ended: number;
+  started: string;
+  ended: string;
   duration: string;
   rate: number;
   totalUsd: number;
-  before: number;
+  before: string;
   from?: string;
   billTo?: string;
   address?: string;
@@ -34,7 +34,7 @@ export class InvoiceComponent implements OnDestroy {
   settings: Proto.Settings;
   litecoinPrice: number;
   total: number;
-  sent: number;
+  sent: string;
   isSent: boolean = false;
   isLoading: boolean = false;
   getSub = new Subscription();
@@ -58,19 +58,19 @@ export class InvoiceComponent implements OnDestroy {
       const WEEK: number = HOUR * 24 * 7;
       this.invoice = {
         id: invoice.getId(),
-        started: invoice.getStartedMs(),
-        ended: invoice.getEndedMs(),
+        started: timestampToDate(invoice.getStartedMs()),
+        ended: timestampToDate(invoice.getEndedMs()),
         duration: timestampToTime(invoice.getDurationMs()),
         rate: invoice.getRate(),
         totalUsd: round(totalUsd, 2),
-        before: invoice.getEndedMs() + WEEK,
+        before: timestampToDate(invoice.getEndedMs() + WEEK),
       };
       if (invoice.getSignedMs() !== 0) {
         this.invoice.from = invoice.getFrom();
         this.invoice.billTo = invoice.getBillTo();
         this.invoice.address = invoice.getAddress();
         this.updatePrice(invoice.getCryptoPrice());
-        this.sent = invoice.getSignedMs();
+        this.sent = timestampToTimeDate(invoice.getSignedMs());
         this.isSent = true;
       } else {
         this.invoice.from = this.settings.getName();
@@ -123,13 +123,14 @@ export class InvoiceComponent implements OnDestroy {
   }
 
   pay(): void {
-    this.sent = Date.now();
+    const now: number = Date.now();
+    this.sent = timestampToTimeDate(now);
     this.isSent = true;
     this.protoInvoice.setAddress(this.invoice.address);
     this.protoInvoice.setFrom(this.invoice.from);
     this.protoInvoice.setBillTo(this.invoice.billTo);
     this.protoInvoice.setCryptoPrice(this.litecoinPrice);
-    this.protoInvoice.setSignedMs(this.sent);
+    this.protoInvoice.setSignedMs(now);
     this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
   }
 
@@ -137,10 +138,11 @@ export class InvoiceComponent implements OnDestroy {
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'pt',
-      format: [675, 412],
+      format: [675, 422],
     });
 
     doc.setFontSize(40);
+    doc.setTextColor('#333');
     doc.text('Invoice', 35, 71);
 
     doc.setFontSize(15);
@@ -159,9 +161,7 @@ export class InvoiceComponent implements OnDestroy {
     doc.rect(35, 155, 614, 2, 'F');
 
     doc.text('Milestone:', 82, 180);
-    let period: string = timestampToDate(this.invoice.started);
-    period += ' - ' + timestampToDate(this.invoice.ended);
-    doc.text(period, 182, 180);
+    doc.text(this.invoice.started + ' - ' + this.invoice.ended, 182, 180);
     doc.text('Duration:', 82, 207);
     doc.text(this.invoice.duration + ' hrs', 182, 207);
     doc.text('Rate:', 82, 234);
@@ -173,8 +173,8 @@ export class InvoiceComponent implements OnDestroy {
     doc.text('TOTAL:', 82, 327);
     doc.text(this.total + ' LTC', 182, 327);
     doc.text('Send to: ' + this.invoice.address, 35, 372);
-    doc.text('before ' + timestampToDate(this.invoice.before), 35, 389);
-    doc.text('Sent: ' + timestampToTimeDate(this.sent), 490, 389);
+    doc.text('before ' + this.invoice.before, 35, 389);
+    doc.text('Sent: ' + this.sent, 490, 389);
 
     doc.addImage('/assets/webdevelopland.png', 'PNG', 570, 15, 70, 70,);
 

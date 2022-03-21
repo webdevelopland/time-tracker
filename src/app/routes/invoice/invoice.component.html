@@ -1,6 +1,10 @@
 <div class="page" *ngIf="!loadingService.isLoading">
   <div class="header panel">
-    <a class="active-button" [routerLink]="['/invoices']">Back</a>
+    <a
+      class="active-button"
+      [routerLink]="['/invoices']"
+      [queryParams]="{ tab: isSent ? 'paid' : 'unpaid' }"
+    >Back</a>
     <div class="active-button" (click)="download()" *ngIf="isSent">Download</div>
   </div>
   <div class="invoice">
@@ -34,7 +38,7 @@
       <div class="card">
         <label>Milestone:</label>
         <div class="value">
-          {{ invoice.started | date:'dd/MM/yyyy' }} - {{ invoice.ended | date:'dd/MM/yyyy' }}
+          {{ invoice.started }} - {{ invoice.ended }}
         </div>
       </div>
       <div class="card">
@@ -72,10 +76,10 @@
     <div class="footer">
       <div class="reminder">
         <div class="line">Send to: {{ invoice.address }}</div>
-        <div class="line">before {{ invoice.before | date:'dd/MM/yyyy' }}</div>
+        <div class="line">before {{ invoice.before }}</div>
       </div>
       <div class="sent" *ngIf="isSent">
-        Sent: {{ sent | date:'HH:mm dd/MM/yyyy' }}
+        Sent: {{ sent }}
       </div>
     </div>
   </div>
