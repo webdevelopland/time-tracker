@@ -1,5 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
 import * as Proto from 'src/proto';
@@ -21,6 +22,7 @@ export class InvoicesComponent implements OnDestroy {
   invoices: Invoice[] = [];
   invoiceList: Proto.Invoice[] = [];
   isFilterPaid: boolean = false;
+  toggle = new FormControl();
   getSub = new Subscription();
 
   constructor(
@@ -34,8 +36,14 @@ export class InvoicesComponent implements OnDestroy {
     this.activatedRoute.queryParams.subscribe(params => {
       if (params && params.tab) {
         this.isFilterPaid = params.tab === 'paid';
+        this.toggle.setValue(this.isFilterPaid, { emitEvent: false });
         this.display();
       }
+    });
+    this.toggle.valueChanges.subscribe(checked => {
+      this.isFilterPaid = checked;
+      const tab: string = this.isFilterPaid ? 'paid' : 'unpaid';
+      this.router.navigate(['/invoices'], { queryParams: { tab: tab } });
     });
   }
 
@@ -58,7 +66,18 @@ export class InvoicesComponent implements OnDestroy {
           return invoice.getSignedMs() !== 0;
         }
       })
-      .sort((a, b) => b.getEndedMs() - a.getEndedMs())
+      .sort((a, b) => {
+        let aTime: number;
+        let bTime: number;
+        if (this.isFilterPaid) {
+          aTime = a.getSignedMs();
+          bTime = b.getSignedMs();
+        } else {
+          aTime = a.getEndedMs();
+          bTime = b.getEndedMs();
+        }
+        return bTime - aTime;
+      })
       .map(invoice => {
         const HOUR: number = 1000 * 60 * 60;
         const hours: number = invoice.getDurationMs() / HOUR;
@@ -70,12 +89,6 @@ export class InvoicesComponent implements OnDestroy {
           isPaid: invoice.getSignedMs() !== 0,
         };
       });
-  }
-
-  toggle(): void {
-    this.isFilterPaid = !this.isFilterPaid;
-    const tab: string = this.isFilterPaid ? 'paid' : 'unpaid';
-    this.router.navigate(['/invoices'], { queryParams: { tab: tab } });
   }
 
   ngOnDestroy() {

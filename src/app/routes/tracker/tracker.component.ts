@@ -15,6 +15,7 @@ import { ContextDialogComponent, ConfirmDialogComponent } from '@/shared/dialogs
 })
 export class TrackerComponent implements OnDestroy {
   bubbleTime: string;
+  bubblesAmount: number;
   milestoneTime: string;
   milestoneDuration: string;
   label: string;
@@ -103,6 +104,7 @@ export class TrackerComponent implements OnDestroy {
     this.bubble.setId(randstr64(15));
     this.bubble.setStartedMs(Date.now());
     this.milestone.addBubble(this.bubble);
+    this.bubblesAmount = this.milestone.getBubbleList().length;
     this.save();
   }
 
@@ -182,6 +184,7 @@ export class TrackerComponent implements OnDestroy {
     this.breakTimer.savedMs = Date.now() - this.milestone.getBreakMs();
     this.breakTimer.start();
     this.label = 'Break';
+    this.bubblesAmount = this.milestone.getBubbleList().length;
   }
 
   toggle(): void {

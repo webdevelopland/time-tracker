@@ -3,7 +3,7 @@
     <a class="active-button" [routerLink]="['/menu']">Back</a>
     <div class="tab" *ngIf="!isFilterPaid">Unpaid invoices</div>
     <div class="tab" *ngIf="isFilterPaid">Paid invoices</div>
-    <div class="active-button" (click)="toggle()">Tab</div>
+    <mat-slide-toggle [formControl]="toggle"></mat-slide-toggle>
   </div>
   <div class="list">
     <a class="invoice" *ngFor="let invoice of invoices" [routerLink]="['/invoice/' + invoice.id]">

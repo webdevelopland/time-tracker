@@ -3,7 +3,7 @@
     <a class="active-button" [routerLink]="['/menu']">Back</a>
     <div class="center">
       <div class="time">{{ bubbleTime }}</div>
-      <div class="status">Today</div>
+      <div class="status">{{ bubblesAmount }} bubble</div>
     </div>
     <div class="active-button" (click)="createNewBubble()">Next</div>
   </div>
