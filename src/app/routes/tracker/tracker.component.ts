@@ -4,9 +4,23 @@ import { Subscription, interval, zip } from 'rxjs';
 import { randstr64, randCustomString, numerals } from 'rndmjs';
 
 import * as Proto from 'src/proto';
-import { timestampToTime, timestampToFullTime, Timer, timestampToDays } from '@/core/functions';
+import {
+  timestampToTime,
+  timestampToFullTime,
+  timestampToTimeDate,
+  timestampToDateTime,
+  Timer,
+  timestampToDays,
+} from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 import { ContextDialogComponent, ConfirmDialogComponent } from '@/shared/dialogs';
+
+interface Session {
+  index: number;
+  start: string;
+  end: string;
+  duration: string;
+}
 
 @Component({
   selector: 'page-tracker',
@@ -15,11 +29,13 @@ import { ContextDialogComponent, ConfirmDialogComponent } from '@/shared/dialogs
 })
 export class TrackerComponent implements OnDestroy {
   bubbleTime: string;
+  bubblesAmount: number;
   milestoneTime: string;
   milestoneDuration: string;
   label: string;
   sessionTime: string;
   settings: Proto.Settings;
+  sessions: Session[] = [];
   status: number;
   statusStyle: string;
   isTracking: boolean = false;
@@ -103,6 +119,8 @@ export class TrackerComponent implements OnDestroy {
     this.bubble.setId(randstr64(15));
     this.bubble.setStartedMs(Date.now());
     this.milestone.addBubble(this.bubble);
+    this.bubblesAmount = this.milestone.getBubbleList().length;
+    this.sessions = [];
     this.save();
   }
 
@@ -123,7 +141,9 @@ export class TrackerComponent implements OnDestroy {
     this.autosaveSub = interval(1000 * 60).subscribe(() => {
       if (this.isTracking) {
         this.milestone.setBreakMs(Date.now());
-        this.session.setEndedMs(Date.now());
+        if (this.session) {
+          this.session.setEndedMs(Date.now());
+        }
       }
       this.save();
     });
@@ -169,17 +189,48 @@ export class TrackerComponent implements OnDestroy {
     this.milestoneTimer.savedMs = 0;
     for (const bubble of this.milestone.getBubbleList()) {
       this.bubbleTimer.savedMs = 0;
-      for (const session of bubble.getSessionList()) {
+      bubble.getSessionList().forEach(session => {
         const sessionDuration = session.getEndedMs() - session.getStartedMs();
         this.bubbleTimer.savedMs += sessionDuration;
         this.milestoneTimer.savedMs += sessionDuration;
-      }
+      });
       this.bubble = bubble;
     }
-
     this.breakTimer.savedMs = Date.now() - this.milestone.getBreakMs();
     this.breakTimer.start();
     this.label = 'Break';
+    this.bubblesAmount = this.milestone.getBubbleList().length;
+    this.updateSessionLog();
+  }
+
+  updateSessionLog(): void {
+    for (const bubble of this.milestone.getBubbleList()) {
+      this.sessions = [];
+      bubble.getSessionList().forEach((session, index) => {
+        const sessionDuration = session.getEndedMs() - session.getStartedMs();
+        this.addSessionLog(session, index, sessionDuration);
+      });
+    }
+  }
+
+  addSessionLog(session: Proto.Session, index: number, duration: number): void {
+    const startDate = new Date(session.getStartedMs());
+    const endDate = new Date(session.getEndedMs());
+    if (startDate.getDate() === endDate.getDate()) {
+      this.sessions.push({
+        index: index + 1,
+        start: timestampToDateTime(session.getStartedMs()),
+        end: timestampToDateTime(session.getEndedMs()),
+        duration: timestampToTime(duration),
+      });
+    } else {
+      this.sessions.push({
+        index: index + 1,
+        start: timestampToTimeDate(session.getStartedMs()),
+        end: timestampToTimeDate(session.getEndedMs()),
+        duration: timestampToTime(duration),
+      });
+    }
   }
 
   toggle(): void {
@@ -232,7 +283,8 @@ export class TrackerComponent implements OnDestroy {
   endSession(): void {
     if (this.session) {
       this.session.setEndedMs(Date.now());
-      this.save();
+      this.updateSessionLog();
+      this.session = undefined;
     }
   }
 

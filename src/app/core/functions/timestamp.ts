@@ -15,7 +15,7 @@ interface TimestampDate {
   year: number;
 }
 
-function getTimestampTime(timestamp: number): TimestampTime {
+export function getTimestampTime(timestamp: number): TimestampTime {
   const date = new Date(timestamp);
   return {
     seconds: date.getSeconds(),
@@ -24,7 +24,7 @@ function getTimestampTime(timestamp: number): TimestampTime {
   };
 }
 
-function getTimestampDate(timestamp: number): TimestampDate {
+export function getTimestampDate(timestamp: number): TimestampDate {
   const date = new Date(timestamp);
   return {
     seconds: date.getSeconds(),
@@ -52,6 +52,15 @@ export function timestampToFullTime(timestamp: number): string {
   dateString += date.hours;
   dateString += ':' + addZero(date.minutes);
   dateString += ':' + addZero(date.seconds);
+  return dateString;
+}
+
+// Date 17:34
+export function timestampToDateTime(timestamp: number): string {
+  const date: TimestampDate = getTimestampDate(timestamp);
+  let dateString: string = '';
+  dateString += date.hours;
+  dateString += ':' + addZero(date.minutes);
   return dateString;
 }
 

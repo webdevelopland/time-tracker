@@ -3,9 +3,16 @@
     <a class="active-button" [routerLink]="['/menu']">Back</a>
     <div class="center">
       <div class="time">{{ bubbleTime }}</div>
-      <div class="status">Today</div>
+      <div class="status">{{ bubblesAmount }} bubble</div>
     </div>
     <div class="active-button" (click)="createNewBubble()">Next</div>
+  </div>
+  <div class="sessions">
+    <div class="session" *ngFor="let session of sessions">
+      <div class="index">{{ session.index }}:</div>
+      <div class="time">{{ session.start }} - {{ session.end }}</div>
+      <div class="duration">{{ session.duration }} hrs</div>
+    </div>
   </div>
   <div class="body">
     <div class="flex">
