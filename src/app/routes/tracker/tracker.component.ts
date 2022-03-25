@@ -144,8 +144,8 @@ export class TrackerComponent implements OnDestroy {
         if (this.session) {
           this.session.setEndedMs(Date.now());
         }
+        this.save();
       }
-      this.save();
     });
   }
 
