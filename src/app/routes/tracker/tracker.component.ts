@@ -123,7 +123,9 @@ export class TrackerComponent implements OnDestroy {
     this.autosaveSub = interval(1000 * 60).subscribe(() => {
       if (this.isTracking) {
         this.milestone.setBreakMs(Date.now());
-        this.session.setEndedMs(Date.now());
+        if (this.session) {
+          this.session.setEndedMs(Date.now());
+        }
       }
       this.save();
     });
@@ -232,7 +234,7 @@ export class TrackerComponent implements OnDestroy {
   endSession(): void {
     if (this.session) {
       this.session.setEndedMs(Date.now());
-      this.save();
+      this.session = undefined;
     }
   }
 
