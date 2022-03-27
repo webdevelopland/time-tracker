@@ -86,14 +86,6 @@ export function timestampToTimeDate(timestamp: number): string {
 }
 
 export function timestampToDays(timestamp: number): string {
-  const days: number = Math.floor(timestamp / (1000 * 60 * 60 * 24));
-  let daysString: string;
-  if (days > 1) {
-    daysString = days + ' days';
-  } else if (days === 1) {
-    daysString = '1 day';
-  } else {
-    daysString = 'New';
-  }
-  return daysString;
+  const days: number = Math.floor(timestamp / (1000 * 60 * 60 * 24)) + 1;
+  return days + ' day';
 }
