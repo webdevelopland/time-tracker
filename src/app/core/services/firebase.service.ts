@@ -92,6 +92,24 @@ export class FirebaseService {
       );
   }
 
+  getMilestone(): Observable<Proto.Milestone> {
+    return this.db.collection('/milestone')
+      .doc('current')
+      .snapshotChanges()
+      .pipe(
+        map(action => {
+          const firebaseElement = action.payload.data() as FirebaseElement;
+          if (firebaseElement && firebaseElement.proto) {
+            return Proto.Milestone.deserializeBinary(
+              this.encodingService.base64ToUint8Array(firebaseElement.proto)
+            );
+          } else {
+            return;
+          }
+        }),
+      );
+  }
+
   setMilestone(milestone: Proto.Milestone): Observable<void> {
     return new Observable(observer => {
       this.db.collection('/milestone')
@@ -114,23 +132,5 @@ export class FirebaseService {
         .then(() => observer.next())
         .catch(() => observer.error());
     });
-  }
-
-  getMilestone(): Observable<Proto.Milestone> {
-    return this.db.collection('/milestone')
-      .doc('current')
-      .snapshotChanges()
-      .pipe(
-        map(action => {
-          const firebaseElement = action.payload.data() as FirebaseElement;
-          if (firebaseElement && firebaseElement.proto) {
-            return Proto.Milestone.deserializeBinary(
-              this.encodingService.base64ToUint8Array(firebaseElement.proto)
-            );
-          } else {
-            return;
-          }
-        }),
-      );
   }
 }

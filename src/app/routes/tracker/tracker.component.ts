@@ -103,8 +103,6 @@ export class TrackerComponent implements OnDestroy {
     this.milestone.setStartedMs(Date.now());
     this.milestone.setBreakMs(Date.now());
     this.createNewBubble();
-    this.label = '';
-    this.breakTimer.stop();
     this.milestoneTimer.destroy();
   }
 
@@ -121,6 +119,8 @@ export class TrackerComponent implements OnDestroy {
     this.milestone.addBubble(this.bubble);
     this.bubblesAmount = this.milestone.getBubbleList().length;
     this.sessions = [];
+    this.session = undefined;
+    this.sessionTimer.destroy();
     this.save();
   }
 
@@ -151,6 +151,8 @@ export class TrackerComponent implements OnDestroy {
 
   tick(): void {
     if (this.isTracking) {
+      this.session.setEndedMs(Date.now());
+      this.updateSessionLog();
       this.sessionTime = timestampToFullTime(this.sessionTimer.display());
     } else {
       this.sessionTime = timestampToTime(this.breakTimer.display());
@@ -162,7 +164,7 @@ export class TrackerComponent implements OnDestroy {
   }
 
   updateStatus(): void {
-    if ((Date.now() - this.milestone.getStartedMs()) < 1000 * 60 * 60 * 24 * 2) {
+    if ((Date.now() - this.milestone.getStartedMs()) < 1000 * 60 * 60 * 24) {
       this.statusStyle = 'new';
     } else {
       const HOUR: number = 1000 * 60 * 60;
@@ -193,6 +195,7 @@ export class TrackerComponent implements OnDestroy {
         const sessionDuration = session.getEndedMs() - session.getStartedMs();
         this.bubbleTimer.savedMs += sessionDuration;
         this.milestoneTimer.savedMs += sessionDuration;
+        this.session = session;
       });
       this.bubble = bubble;
     }
@@ -200,37 +203,80 @@ export class TrackerComponent implements OnDestroy {
     this.breakTimer.start();
     this.label = 'Break';
     this.bubblesAmount = this.milestone.getBubbleList().length;
-    this.updateSessionLog();
+    const duration: number = this.updateSessionLog();
+    this.continueSession(duration);
   }
 
-  updateSessionLog(): void {
-    for (const bubble of this.milestone.getBubbleList()) {
-      this.sessions = [];
-      bubble.getSessionList().forEach((session, index) => {
-        const sessionDuration = session.getEndedMs() - session.getStartedMs();
-        this.addSessionLog(session, index, sessionDuration);
+  // Returns duration of last merged session
+  updateSessionLog(): number {
+    this.sessions = [];
+    let start: number;
+    let sessionDuration: number = 0;
+    let skip: boolean;
+    let n: number = 1;
+    const sessionList: Proto.Session[] = this.bubble.getSessionList();
+    sessionList.forEach((session, index) => {
+      const nextSession: Proto.Session = sessionList[index + 1];
+      skip = false;
+      if (nextSession) {
+        const breakDuration: number = nextSession.getStartedMs() - session.getEndedMs();
+        if (breakDuration < 1000 * 60 * 5) {
+          skip = true;
+        }
+      }
+      sessionDuration += session.getEndedMs() - session.getStartedMs();
+      if (!start) {
+        start = session.getStartedMs();
+      }
+      if (skip) {
+        return;
+      }
+      this.sessions.push({
+        index: n,
+        start: timestampToDateTime(start),
+        end: this.getEndString(session, sessionList[index - 1]),
+        duration: timestampToTime(sessionDuration),
       });
+      start = undefined;
+      n++;
+      if (index !== sessionList.length - 1) {
+        sessionDuration = 0;
+      }
+    });
+    return sessionDuration;
+  }
+
+  // Updates session timer based on previous sessions, when page loads
+  continueSession(duration: number): void {
+    if (this.session && this.session.getEndedMs() !== undefined) {
+      const breakDuration: number = Date.now() - this.session.getEndedMs();
+      if (breakDuration < 1000 * 60 * 5) {
+        this.sessionTimer.savedMs = duration;
+      }
     }
   }
 
-  addSessionLog(session: Proto.Session, index: number, duration: number): void {
-    const startDate = new Date(session.getStartedMs());
-    const endDate = new Date(session.getEndedMs());
-    if (startDate.getDate() === endDate.getDate()) {
-      this.sessions.push({
-        index: index + 1,
-        start: timestampToDateTime(session.getStartedMs()),
-        end: timestampToDateTime(session.getEndedMs()),
-        duration: timestampToTime(duration),
-      });
+  getEndString(session: Proto.Session, prevSession: Proto.Session): string {
+    if (prevSession) {
+      if (this.isOnSameDay(
+        session.getStartedMs(),
+        session.getEndedMs(),
+        prevSession.getEndedMs(),
+      )) {
+        return timestampToDateTime(session.getEndedMs());
+      } else {
+        return timestampToTimeDate(session.getEndedMs());
+      }
     } else {
-      this.sessions.push({
-        index: index + 1,
-        start: timestampToTimeDate(session.getStartedMs()),
-        end: timestampToTimeDate(session.getEndedMs()),
-        duration: timestampToTime(duration),
-      });
+      return timestampToDateTime(session.getEndedMs());
     }
+  }
+
+  isOnSameDay(ms1: number, ms2: number, ms3: number): boolean {
+    const date1 = new Date(ms1);
+    const date2 = new Date(ms2);
+    const date3 = new Date(ms3);
+    return date1.getDate() === date2.getDate() && date2.getDate() === date3.getDate();
   }
 
   toggle(): void {
@@ -248,7 +294,9 @@ export class TrackerComponent implements OnDestroy {
     this.label = 'Session';
     this.breakTimer.stop();
 
-    this.sessionTimer.destroy();
+    if (this.breakTimer.display() > 1000 * 60 * 5) {
+      this.sessionTimer.destroy();
+    }
     this.sessionTimer.start();
     this.addSession();
 
@@ -277,6 +325,7 @@ export class TrackerComponent implements OnDestroy {
     this.session = session;
     this.bubble.addSession(session);
     this.milestone.setBreakMs(Date.now());
+    this.updateSessionLog();
     this.save();
   }
 
