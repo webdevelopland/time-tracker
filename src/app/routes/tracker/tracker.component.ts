@@ -107,9 +107,11 @@ export class TrackerComponent implements OnDestroy {
   }
 
   createNewBubble(): void {
-    this.stop();
-    this.session = undefined;
+    if (this.isTracking) {
+      this.stop();
+    }
     this.isTracking = false;
+    this.session = undefined;
     if (this.bubble) {
       this.bubble.setEndedMs(Date.now());
     }
@@ -326,7 +328,7 @@ export class TrackerComponent implements OnDestroy {
   }
 
   endSession(): void {
-    if (this.session && this.isTracking) {
+    if (this.session) {
       this.session.setEndedMs(Date.now());
       this.updateSessionLog();
       this.session = undefined;
