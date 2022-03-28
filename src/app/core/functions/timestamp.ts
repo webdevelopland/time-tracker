@@ -86,6 +86,15 @@ export function timestampToTimeDate(timestamp: number): string {
 }
 
 export function timestampToDays(timestamp: number): string {
-  const days: number = Math.floor(timestamp / (1000 * 60 * 60 * 24)) + 1;
-  return days + ' day';
+  const minutesFloat: number = timestamp / (1000 * 60);
+  const hoursFloat: number = minutesFloat / 60;
+  const daysFloat: number = hoursFloat / 24;
+  const days: number = Math.floor(daysFloat);
+  const hours: number = Math.floor(hoursFloat - days * 24);
+  let str = '';
+  if (days > 0) {
+    str += days + 'd ';
+  }
+  str += hours + 'hrs';
+  return str;
 }
