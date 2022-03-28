@@ -107,8 +107,9 @@ export class TrackerComponent implements OnDestroy {
   }
 
   createNewBubble(): void {
-    this.isTracking = false;
     this.stop();
+    this.session = undefined;
+    this.isTracking = false;
     if (this.bubble) {
       this.bubble.setEndedMs(Date.now());
     }
@@ -119,7 +120,6 @@ export class TrackerComponent implements OnDestroy {
     this.milestone.addBubble(this.bubble);
     this.bubblesAmount = this.milestone.getBubbleList().length;
     this.sessions = [];
-    this.session = undefined;
     this.sessionTimer.destroy();
     this.save();
   }
@@ -195,7 +195,6 @@ export class TrackerComponent implements OnDestroy {
         const sessionDuration = session.getEndedMs() - session.getStartedMs();
         this.bubbleTimer.savedMs += sessionDuration;
         this.milestoneTimer.savedMs += sessionDuration;
-        this.session = session;
       });
       this.bubble = bubble;
     }
@@ -248,11 +247,8 @@ export class TrackerComponent implements OnDestroy {
 
   // Updates session timer based on previous sessions, when page loads
   continueSession(duration: number): void {
-    if (this.session && this.session.getEndedMs() !== undefined) {
-      const breakDuration: number = Date.now() - this.session.getEndedMs();
-      if (breakDuration < 1000 * 60 * 5) {
-        this.sessionTimer.savedMs = duration;
-      }
+    if (this.breakTimer.display() < 1000 * 60 * 5) {
+      this.sessionTimer.savedMs = duration;
     }
   }
 
@@ -330,7 +326,7 @@ export class TrackerComponent implements OnDestroy {
   }
 
   endSession(): void {
-    if (this.session) {
+    if (this.session && this.isTracking) {
       this.session.setEndedMs(Date.now());
       this.updateSessionLog();
       this.session = undefined;
