@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   >.panel {
+    position: relative;
+    z-index: 10;
     display: flex;
     justify-content: space-between;
     padding: 10px;
@@ -14,20 +16,28 @@
       box-sizing: border-box;
     }
   }
+  >.fixed {
+    position: fixed;
+    z-index: 5;
+    width: 100%;
+    left: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   >.header {
     align-items: flex-start;
-    >.center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      >.time {
-        color: white;
-        font-size: 30px;
-      }
-      >.status {
-        font-size: 14px;
-        opacity: 0.8;
-      }
+  }
+  >.bubble {
+    >.time {
+      color: white;
+      font-size: 30px;
+    }
+    >.status {
+      font-size: 14px;
+      opacity: 0.8;
     }
   }
   >.sessions {
@@ -103,43 +113,41 @@
       color: white;
       font-size: 30px;
     }
-    >.center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      >.status {
-        margin-bottom: 5px;
-        text-align: center;
-        border-radius: 8px;
-        padding: 2px 6px;
-        &.slow {
-          background: white;
-          color: #111;
-        }
-        &.slack {
-          background: #bdfeff;
-          color: #111;
-        }
-        &.success {
-          background: #6fda44;
-          color: white;
-        }
-        &.warning {
-          background: #f4bf0c;
-          color: #111;
-        }
-        &.overlimit {
-          background: #d81313;
-          color: white;
-        }
-        &.new {
-          display: none;
-        }
+  }
+  >.milestone {
+    bottom: 0;
+    >.status {
+      margin-bottom: 5px;
+      text-align: center;
+      border-radius: 8px;
+      padding: 2px 6px;
+      &.slow {
+        background: white;
+        color: #111;
       }
-      >.time {
+      &.slack {
+        background: #bdfeff;
+        color: #111;
+      }
+      &.success {
+        background: #6fda44;
         color: white;
-        font-size: 30px;
       }
+      &.warning {
+        background: #f4bf0c;
+        color: #111;
+      }
+      &.overlimit {
+        background: #d81313;
+        color: white;
+      }
+      &.new {
+        display: none;
+      }
+    }
+    >.time {
+      color: white;
+      font-size: 30px;
     }
   }
 }

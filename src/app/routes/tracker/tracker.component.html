@@ -1,11 +1,11 @@
 <div class="page" *ngIf="!loadingService.isLoading">
   <div class="header panel">
     <a class="active-button" [routerLink]="['/menu']">Back</a>
-    <div class="center">
-      <div class="time">{{ bubbleTime }}</div>
-      <div class="status">{{ bubblesAmount }} bubble</div>
-    </div>
     <div class="active-button" (click)="createNewBubble()">Next</div>
+  </div>
+  <div class="bubble fixed">
+    <div class="time">{{ bubbleTime }}</div>
+    <div class="status">{{ bubblesAmount }} bubble</div>
   </div>
   <div class="sessions">
     <div class="session" *ngFor="let session of sessions">
@@ -28,10 +28,10 @@
   </div>
   <div class="footer panel">
     <div class="duration">{{ milestoneDuration }}</div>
-    <div class="center">
-      <div class="status" [ngClass]="statusStyle">{{ status }}%</div>
-      <div class="time">{{ milestoneTime }}</div>
-    </div>
     <div class="active-button" (click)="askToEnd()">End</div>
+  </div>
+  <div class="milestone fixed">
+    <div class="status" [ngClass]="statusStyle">{{ status }}%</div>
+    <div class="time">{{ milestoneTime }}</div>
   </div>
 </div>
