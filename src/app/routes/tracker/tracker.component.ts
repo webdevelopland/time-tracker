@@ -7,8 +7,8 @@ import * as Proto from 'src/proto';
 import {
   timestampToTime,
   timestampToFullTime,
-  timestampToTimeDate,
   timestampToDateTime,
+  timestampToDate,
   Timer,
   timestampToDays,
 } from '@/core/functions';
@@ -20,6 +20,7 @@ interface Session {
   start: string;
   end: string;
   duration: string;
+  date: string;
 }
 
 @Component({
@@ -235,8 +236,9 @@ export class TrackerComponent implements OnDestroy {
       this.sessions.push({
         index: n,
         start: timestampToDateTime(start),
-        end: this.getEndString(session, sessionList[index - 1]),
+        end: timestampToDateTime(session.getEndedMs()),
         duration: timestampToTime(sessionDuration),
+        date: this.getSessionDate(session, sessionList[index - 1], n),
       });
       start = undefined;
       n++;
@@ -254,19 +256,15 @@ export class TrackerComponent implements OnDestroy {
     }
   }
 
-  getEndString(session: Proto.Session, prevSession: Proto.Session): string {
-    if (prevSession) {
-      if (this.isOnSameDay(
-        session.getStartedMs(),
-        session.getEndedMs(),
-        prevSession.getEndedMs(),
-      )) {
-        return timestampToDateTime(session.getEndedMs());
-      } else {
-        return timestampToTimeDate(session.getEndedMs());
-      }
+  getSessionDate(session: Proto.Session, prevSession: Proto.Session, n: number): string {
+    if (!prevSession || n === 1 || (prevSession && !this.isOnSameDay(
+      session.getStartedMs(),
+      session.getEndedMs(),
+      prevSession.getEndedMs(),
+    ))) {
+      return timestampToDate(session.getEndedMs());
     } else {
-      return timestampToDateTime(session.getEndedMs());
+      return '';
     }
   }
 
