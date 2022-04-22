@@ -1,0 +1,14 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header">
+    <a class="active-button" [routerLink]="['/menu']">Back</a>
+  </div>
+  <div class="list">
+    <a class="milestone"
+      *ngFor="let milestone of milestones"
+      [routerLink]="['/milestone/' + milestone.url]"
+    >
+      <div class="id">{{ milestone.id }}</div>
+      <div class="date">{{ milestone.label }}</div>
+    </a>
+  </div>
+</div>

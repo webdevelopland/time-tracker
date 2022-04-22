@@ -1,0 +1,124 @@
+@import 'styles/variables';
+
+.page {
+  display: flex;
+  flex-direction: column;
+  $label: 130px;
+  >.panel {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
+    >.active-button {
+      display: block;
+      padding: 6px 20px;
+      box-sizing: border-box;
+    }
+  }
+  >.fixed {
+    position: fixed;
+    z-index: 5;
+    width: 100%;
+    left: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 18px;
+    text-transform: capitalize;
+  }
+  >.header {
+    align-items: flex-start;
+  }
+  >.body {
+    overflow-y: auto;
+    padding: 0 30px;
+    box-sizing: border-box;
+    >.stats {
+      >.card {
+        display: flex;
+        margin-top: 10px;
+        label {
+          width: $label;
+        }
+      }
+    }
+    >.activity {
+      margin-top: 20px;
+      >.time {
+        display: flex;
+        position: relative;
+        height: 35px;
+        >div {
+          position: absolute;
+          top: 0;
+          font-size: 25px;
+        }
+        >.six {
+          left: calc(#{$label} + 145px - 15px);
+        }
+        >.twelve {
+          left: calc(#{$label} + 145px * 2 + 10px - 25px);
+        }
+        >.eighteen {
+          left: calc(#{$label} + 145px * 3 + 10px * 2 - 25px);
+        }
+      }
+      >.week {
+        margin-bottom: 10px;
+        >.day {
+          display: flex;
+          align-items: center;
+          margin-bottom: 5px;
+          >.date {
+            width: $label;
+          }
+          >.quarter {
+            display: flex;
+            margin-right: 10px;
+            >.hour {
+              width: 20px;
+              height: 20px;
+              border-radius: 5px;
+              margin-right: 5px;
+              background: white;
+              position: relative;
+              >.status {
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                top: 0;
+                left: 0;
+                border-radius: 5px;
+                background: #6fda44;
+              }
+              &:last-child {
+                margin: 0;
+              }
+            }
+          }
+          &:last-child {
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
+  >.footer {
+    align-items: flex-end;
+    >.duration {
+      color: white;
+      font-size: 30px;
+    }
+  }
+  >.milestone {
+    bottom: 0;
+    >.time {
+      color: white;
+      font-size: 30px;
+    }
+  }
+}
