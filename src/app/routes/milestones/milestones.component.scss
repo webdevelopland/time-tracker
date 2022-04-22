@@ -1,0 +1,34 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-sizing: border-box;
+  >.header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 20px;
+    >.active-button {
+      display: block;
+      padding: 6px 20px;
+      box-sizing: border-box;
+    }
+  }
+  >.list {
+    overflow-y: auto;
+    >.milestone {
+      background: white;
+      border-radius: 6px;
+      color: #333;
+      padding: 10px;
+      height: 24px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 400px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  }
+}

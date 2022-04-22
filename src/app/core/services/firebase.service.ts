@@ -133,4 +133,35 @@ export class FirebaseService {
         .catch(() => observer.error());
     });
   }
+
+  getMilestoneList(): Observable<Proto.Milestone[]> {
+    return this.db.collection('/milestones')
+      .snapshotChanges()
+      .pipe(
+        map(action => action.map(a => {
+          const firebaseElement = a.payload.doc.data() as FirebaseElement;
+          return Proto.Milestone.deserializeBinary(
+            this.encodingService.base64ToUint8Array(firebaseElement.proto)
+          );
+        })),
+      );
+  }
+
+  getEndedMilestone(id: string): Observable<Proto.Milestone> {
+    return this.db.collection('/milestones')
+      .doc(id)
+      .snapshotChanges()
+      .pipe(
+        map(action => {
+          const firebaseElement = action.payload.data() as FirebaseElement;
+          if (firebaseElement && firebaseElement.proto) {
+            return Proto.Milestone.deserializeBinary(
+              this.encodingService.base64ToUint8Array(firebaseElement.proto)
+            );
+          } else {
+            return;
+          }
+        }),
+      );
+  }
 }

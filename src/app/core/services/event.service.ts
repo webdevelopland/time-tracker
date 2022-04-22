@@ -3,9 +3,6 @@ import { Subject } from 'rxjs';
 
 @Injectable()
 export class EventService {
-  isApple: boolean;
-  isDialog: boolean = false;
-  isEditing: boolean = false;
   keydown = new Subject<KeyboardEvent>();
   mouseup = new Subject<MouseEvent>();
 
@@ -18,10 +15,5 @@ export class EventService {
         this.mouseup.next(event);
       }
     });
-  }
-
-  destroy(): void {
-    this.isDialog = false;
-    this.isEditing = false;
   }
 }

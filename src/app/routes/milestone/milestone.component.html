@@ -1,0 +1,53 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header panel">
+    <a class="active-button" [routerLink]="['/milestones']">Back</a>
+    <a class="active-button" [routerLink]="['/invoice', id]" *ngIf="!isCurrent">Invoice</a>
+  </div>
+  <div class="fixed">{{ id }}</div>
+  <div class="body">
+    <div class="stats">
+      <div class="card">
+        <label>Started:</label>
+        <div class="value">{{ milestone.started }}</div>
+      </div>
+      <div class="card">
+        <label>Ended:</label>
+        <div class="value">{{ milestone.ended }}</div>
+      </div>
+      <div class="card">
+        <label>Duration:</label>
+        <div class="value">{{ milestone.duration }}</div>
+      </div>
+      <div class="card">
+        <label>Tracked time:</label>
+        <div class="value">{{ milestone.tracked }} hrs</div>
+      </div>
+      <div class="card">
+        <label>Rate:</label>
+        <div class="value">{{ milestone.rate }}$ per hour</div>
+      </div>
+      <div class="card">
+        <label>Total USD:</label>
+        <div class="value">{{ milestone.usd }}$</div>
+      </div>
+    </div>
+    <div class="activity" *ngIf="activity">
+      <div class="time">
+        <div class="six">6:00</div>
+        <div class="twelve">12:00</div>
+        <div class="eighteen">18:00</div>
+      </div>
+      <div class="week" *ngFor="let week of activity.weeks">
+        <div class="day" *ngFor="let day of week.days">
+          <div class="date">{{ day.date }}</div>
+          <div class="quarter" *ngFor="let quarter of day.quarters">
+            <div class="hour" *ngFor="let hour of quarter.hours">
+              <div class="status" [style.opacity]="hour.progress"></div>
+            </div>
+          </div>
+          <div class="weekday">{{ day.label }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
