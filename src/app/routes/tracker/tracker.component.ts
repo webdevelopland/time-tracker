@@ -355,7 +355,12 @@ export class TrackerComponent implements OnDestroy {
   }
 
   save(): void {
-    this.setSub = this.firebaseService.setMilestone(this.milestone).subscribe();
+    this.setSub = this.firebaseService.setMilestone(this.milestone).subscribe(
+      () => {},
+      () => {
+        this.notificationService.warning("Action can't be saved");
+      }
+    );
   }
 
   ngOnDestroy() {

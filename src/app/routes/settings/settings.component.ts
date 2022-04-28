@@ -50,6 +50,8 @@ export class SettingsComponent implements OnDestroy {
     settings.setBillTo(this.billTo);
     this.setSub = this.firebaseService.setSettings(settings).subscribe(() => {
       this.notificationService.success('Saved');
+    }, () => {
+      this.notificationService.warning('Permission denied');
     });
   }
 
