@@ -108,7 +108,7 @@ export class InvoiceComponent implements OnDestroy {
     url += '?fsym=LTC';
     url += '&tsym=USD';
     url += '&limit=119';
-    url += '&api_key=0646cc7b8a4d4b54926c74e0b20253b57fd4ee406df79b3d57d5439874960146';
+    url += '&api_key=f4ac2f3f42fe5c8bcf3d8ad3e13fed0626122f118708584e27257683e8dd87c9';
     fetch(url)
       .then(response => {
         if (response.status === 200) {
