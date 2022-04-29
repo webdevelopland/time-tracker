@@ -116,10 +116,11 @@ export class InvoiceComponent implements OnDestroy {
         }
       })
       .then(json => {
+        json.Data.Data.sort((a, b) => b.time - a.time);
         this.updatePrice(json.Data.Data[0].close);
         this.isLoading = false;
       })
-      .catch(() => {});
+      .catch(() => { });
   }
 
   pay(): void {
