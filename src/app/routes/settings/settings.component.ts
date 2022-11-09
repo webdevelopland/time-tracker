@@ -12,6 +12,7 @@ import { LoadingService, FirebaseService, NotificationService } from '@/core/ser
 export class SettingsComponent implements OnDestroy {
   limit: number;
   rate: number;
+  currency: string;
   address: string;
   name: string;
   billTo: string;
@@ -33,6 +34,7 @@ export class SettingsComponent implements OnDestroy {
       if (settings) {
         this.limit = settings.getLimit();
         this.rate = settings.getRate();
+        this.currency = settings.getCryptocurrency();
         this.address = settings.getWallet();
         this.name = settings.getName();
         this.billTo = settings.getBillTo();
@@ -45,6 +47,7 @@ export class SettingsComponent implements OnDestroy {
     const settings = new Proto.Settings();
     settings.setLimit(this.limit);
     settings.setWallet(this.address);
+    settings.setCryptocurrency(this.currency);
     settings.setRate(this.rate);
     settings.setName(this.name);
     settings.setBillTo(this.billTo);

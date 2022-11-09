@@ -8,4 +8,5 @@ message Settings {
   float rate = 3; // $ per hour
   string name = 4;
   string bill_to = 5;
+  string cryptocurrency = 6; // Currency label. E.g. "LTC"
 }

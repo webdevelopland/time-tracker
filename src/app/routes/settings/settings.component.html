@@ -8,10 +8,19 @@
     <input type="number" placeholder="Rate" [(ngModel)]="rate">
   </div>
   <div class="row">
-    <label>LTC address</label>
+    <label>Currency label</label>
     <input
       type="text"
-      placeholder="LTC address"
+      placeholder="LTC"
+      [(ngModel)]="currency"
+      spellcheck=false
+    >
+  </div>
+  <div class="row">
+    <label>Crypto address</label>
+    <input
+      type="text"
+      placeholder="Address"
       [(ngModel)]="address"
       spellcheck=false
     >

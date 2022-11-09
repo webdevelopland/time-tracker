@@ -4,8 +4,14 @@ import { Subscription, zip } from 'rxjs';
 import { jsPDF } from 'jspdf';
 
 import * as Proto from 'src/proto';
-import { round, timestampToTime, timestampToDate, timestampToTimeDate } from '@/core/functions';
-import { LoadingService, FirebaseService } from '@/core/services';
+import {
+  round, cround,
+  timestampToTime,
+  timestampToDate,
+  timestampToTimeDate,
+  calculate,
+} from '@/core/functions';
+import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 
 interface Invoice {
   id: string;
@@ -15,6 +21,7 @@ interface Invoice {
   rate: number;
   totalUsd: number;
   before: string;
+  label: string; // E.g. LTC
   from?: string;
   billTo?: string;
   address?: string;
@@ -32,7 +39,7 @@ export class InvoiceComponent implements OnDestroy {
   invoice: Invoice;
   protoInvoice: Proto.Invoice;
   settings: Proto.Settings;
-  litecoinPrice: number;
+  price: number;
   total: number;
   sent: string;
   isSent: boolean = false;
@@ -44,6 +51,7 @@ export class InvoiceComponent implements OnDestroy {
     public activatedRoute: ActivatedRoute,
     public loadingService: LoadingService,
     public firebaseService: FirebaseService,
+    private notificationService: NotificationService,
   ) {
     this.id = this.activatedRoute.snapshot.params['id'];
     this.loadingService.isLoading = true;
@@ -64,6 +72,7 @@ export class InvoiceComponent implements OnDestroy {
         rate: invoice.getRate(),
         totalUsd: round(totalUsd, 2),
         before: timestampToDate(invoice.getEndedMs() + WEEK),
+        label: invoice.getCryptocurrency(),
       };
       if (invoice.getSignedMs() !== 0) {
         this.invoice.from = invoice.getFrom();
@@ -98,29 +107,18 @@ export class InvoiceComponent implements OnDestroy {
   }
 
   updatePrice(price: number): void {
-    this.litecoinPrice = price;
-    this.total = round(this.invoice.totalUsd / this.litecoinPrice, 3);
+    this.price = price;
+    this.total = cround(this.invoice.totalUsd / this.price, this.invoice.label);
   }
 
   calculate(): void {
     this.isLoading = true;
-    let url: string = 'https://min-api.cryptocompare.com/data/v2/histominute';
-    url += '?fsym=LTC';
-    url += '&tsym=USD';
-    url += '&limit=119';
-    url += '&api_key=f4ac2f3f42fe5c8bcf3d8ad3e13fed0626122f118708584e27257683e8dd87c9';
-    fetch(url)
-      .then(response => {
-        if (response.status === 200) {
-          return response.json();
-        }
-      })
-      .then(json => {
-        json.Data.Data.sort((a, b) => b.time - a.time);
-        this.updatePrice(json.Data.Data[0].close);
-        this.isLoading = false;
-      })
-      .catch(() => { });
+    calculate(this.invoice.label).subscribe(price => {
+      this.updatePrice(price);
+      this.isLoading = false;
+    }, () => {
+      this.notificationService.error('Invalid cryptocurrency rates');
+    });
   }
 
   pay(): void {
@@ -130,7 +128,7 @@ export class InvoiceComponent implements OnDestroy {
     this.protoInvoice.setAddress(this.invoice.address);
     this.protoInvoice.setFrom(this.invoice.from);
     this.protoInvoice.setBillTo(this.invoice.billTo);
-    this.protoInvoice.setCryptoPrice(this.litecoinPrice);
+    this.protoInvoice.setCryptoPrice(this.price);
     this.protoInvoice.setSignedMs(now);
     this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
   }
@@ -169,10 +167,10 @@ export class InvoiceComponent implements OnDestroy {
     doc.text(this.invoice.rate + '$ per hour', 182, 234);
     doc.text('Total USD:', 82, 261);
     doc.text(this.invoice.totalUsd + '$', 182, 261);
-    doc.text('Litecoin price:', 82, 300);
-    doc.text(this.litecoinPrice + '$', 182, 300);
+    doc.text(this.invoice.label + ' price:', 82, 300);
+    doc.text(this.price + '$', 182, 300);
     doc.text('TOTAL:', 82, 327);
-    doc.text(this.total + ' LTC', 182, 327);
+    doc.text(this.total + ' ' + this.invoice.label, 182, 327);
     doc.text('Send to: ' + this.invoice.address, 35, 372);
     doc.text('before ' + this.invoice.before, 35, 389);
     doc.text('Sent: ' + this.sent, 490, 389);
