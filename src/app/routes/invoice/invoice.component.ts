@@ -155,7 +155,7 @@ export class InvoiceComponent implements OnDestroy {
     this.protoInvoice.setBillTo(this.invoice.billTo);
     this.protoInvoice.setCryptoPrice(this.price);
     this.protoInvoice.setSignedMs(now);
-    // this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
+    this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
   }
 
   download(): void {

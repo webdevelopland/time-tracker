@@ -96,14 +96,14 @@ export class TrackerComponent implements OnDestroy {
       this.milestone.setEndedMs(Date.now());
       if (save) {
         this.addInvoice();
-        // this.milestoneSub = this.firebaseService.saveMilestone(this.milestone).subscribe();
+        this.milestoneSub = this.firebaseService.saveMilestone(this.milestone).subscribe();
       }
     }
     this.milestone = new Proto.Milestone();
     this.milestone.setId('W' + randCustomString(numerals, 13));
     this.milestone.setStartedMs(Date.now());
     this.milestone.setBreakMs(Date.now());
-    // this.createNewBubble();
+    this.createNewBubble();
     this.milestoneTimer.destroy();
   }
 
