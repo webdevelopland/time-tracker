@@ -15,4 +15,6 @@ message Invoice {
   string address = 10; // LTC address to get payments
   string from = 11;
   string bill_to = 12;
+  float fee_p = 13; // % fee
+  float fee_c = 14; // $ fee
 }

@@ -53,6 +53,24 @@
           {{ invoice.rate }}$ per hour
         </div>
       </div>
+      <div class="card" *ngIf="invoice.totalUsd !== invoice.totalBeforeFee">
+        <label>Hours USD:</label>
+        <div class="value">
+          {{ invoice.totalBeforeFee }}$
+        </div>
+      </div>
+      <div class="card" *ngIf="invoice.feeP">
+        <label>% fee:</label>
+        <div class="value">
+          - {{ invoice.feeP }}%
+        </div>
+      </div>
+      <div class="card" *ngIf="invoice.feeC">
+        <label>$ fee:</label>
+        <div class="value">
+          - {{ invoice.feeC }}$
+        </div>
+      </div>
       <div class="card">
         <label>Total USD:</label>
         <div class="value">

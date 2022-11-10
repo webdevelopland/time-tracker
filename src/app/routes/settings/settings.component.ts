@@ -14,6 +14,8 @@ export class SettingsComponent implements OnDestroy {
   rate: number;
   currency: string;
   address: string;
+  feeP: number;
+  feeC: number;
   name: string;
   billTo: string;
   getSub = new Subscription();
@@ -36,6 +38,8 @@ export class SettingsComponent implements OnDestroy {
         this.rate = settings.getRate();
         this.currency = settings.getCryptocurrency();
         this.address = settings.getWallet();
+        this.feeP = settings.getFeeP();
+        this.feeC = settings.getFeeC();
         this.name = settings.getName();
         this.billTo = settings.getBillTo();
       }
@@ -48,6 +52,8 @@ export class SettingsComponent implements OnDestroy {
     settings.setLimit(this.limit);
     settings.setWallet(this.address);
     settings.setCryptocurrency(this.currency);
+    settings.setFeeP(this.feeP);
+    settings.setFeeC(this.feeC);
     settings.setRate(this.rate);
     settings.setName(this.name);
     settings.setBillTo(this.billTo);
