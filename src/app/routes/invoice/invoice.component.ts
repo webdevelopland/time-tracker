@@ -4,8 +4,14 @@ import { Subscription, zip } from 'rxjs';
 import { jsPDF } from 'jspdf';
 
 import * as Proto from 'src/proto';
-import { round, timestampToTime, timestampToDate, timestampToTimeDate } from '@/core/functions';
-import { LoadingService, FirebaseService } from '@/core/services';
+import {
+  round, cround,
+  timestampToTime,
+  timestampToDate,
+  timestampToTimeDate,
+  calculate,
+} from '@/core/functions';
+import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 
 interface Invoice {
   id: string;
@@ -13,11 +19,21 @@ interface Invoice {
   ended: string;
   duration: string;
   rate: number;
-  totalUsd: number;
+  totalBeforeFee: number;
+  totalUsd?: number;
   before: string;
+  label: string; // E.g. LTC
   from?: string;
   billTo?: string;
   address?: string;
+  feeP?: number;
+  feeC?: number;
+}
+
+interface PDF {
+  label: string;
+  value: string;
+  y: number;
 }
 
 const HOUR: number = 1000 * 60 * 60;
@@ -32,7 +48,7 @@ export class InvoiceComponent implements OnDestroy {
   invoice: Invoice;
   protoInvoice: Proto.Invoice;
   settings: Proto.Settings;
-  litecoinPrice: number;
+  price: number;
   total: number;
   sent: string;
   isSent: boolean = false;
@@ -44,6 +60,7 @@ export class InvoiceComponent implements OnDestroy {
     public activatedRoute: ActivatedRoute,
     public loadingService: LoadingService,
     public firebaseService: FirebaseService,
+    private notificationService: NotificationService,
   ) {
     this.id = this.activatedRoute.snapshot.params['id'];
     this.loadingService.isLoading = true;
@@ -62,9 +79,26 @@ export class InvoiceComponent implements OnDestroy {
         ended: timestampToDate(invoice.getEndedMs()),
         duration: timestampToTime(invoice.getDurationMs()),
         rate: invoice.getRate(),
-        totalUsd: round(totalUsd, 2),
+        totalBeforeFee: round(totalUsd, 2),
         before: timestampToDate(invoice.getEndedMs() + WEEK),
+        label: invoice.getCryptocurrency(),
       };
+      this.invoice.totalUsd = this.invoice.totalBeforeFee;
+      if (invoice.getFeeP() || invoice.getFeeC()) {
+        if (invoice.getFeeP()) {
+          this.invoice.feeP = invoice.getFeeP();
+          this.invoice.totalUsd *= 1 - this.invoice.feeP/100;
+        }
+        if (invoice.getFeeC()) {
+          this.invoice.feeC = invoice.getFeeC();
+          this.invoice.totalUsd -= this.invoice.feeC;
+        }
+        this.invoice.totalUsd = round(this.invoice.totalUsd, 2);
+        if (this.invoice.totalUsd <= 0) {
+          this.invoice.totalUsd = 0;
+          this.notificationService.warning('Total is too small');
+        }
+      }
       if (invoice.getSignedMs() !== 0) {
         this.invoice.from = invoice.getFrom();
         this.invoice.billTo = invoice.getBillTo();
@@ -98,29 +132,18 @@ export class InvoiceComponent implements OnDestroy {
   }
 
   updatePrice(price: number): void {
-    this.litecoinPrice = price;
-    this.total = round(this.invoice.totalUsd / this.litecoinPrice, 3);
+    this.price = price;
+    this.total = cround(this.invoice.totalUsd / this.price, this.invoice.label);
   }
 
   calculate(): void {
     this.isLoading = true;
-    let url: string = 'https://min-api.cryptocompare.com/data/v2/histominute';
-    url += '?fsym=LTC';
-    url += '&tsym=USD';
-    url += '&limit=119';
-    url += '&api_key=f4ac2f3f42fe5c8bcf3d8ad3e13fed0626122f118708584e27257683e8dd87c9';
-    fetch(url)
-      .then(response => {
-        if (response.status === 200) {
-          return response.json();
-        }
-      })
-      .then(json => {
-        json.Data.Data.sort((a, b) => b.time - a.time);
-        this.updatePrice(json.Data.Data[0].close);
-        this.isLoading = false;
-      })
-      .catch(() => { });
+    calculate(this.invoice.label).subscribe(price => {
+      this.updatePrice(price);
+      this.isLoading = false;
+    }, () => {
+      this.notificationService.error('Invalid cryptocurrency rates');
+    });
   }
 
   pay(): void {
@@ -130,54 +153,109 @@ export class InvoiceComponent implements OnDestroy {
     this.protoInvoice.setAddress(this.invoice.address);
     this.protoInvoice.setFrom(this.invoice.from);
     this.protoInvoice.setBillTo(this.invoice.billTo);
-    this.protoInvoice.setCryptoPrice(this.litecoinPrice);
+    this.protoInvoice.setCryptoPrice(this.price);
     this.protoInvoice.setSignedMs(now);
     this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
   }
 
   download(): void {
+    const pdfList: PDF[] = [];
+    let y: number = 180;
+    const step = 27;
+    pdfList.push({
+      label: 'Milestone:',
+      value: this.invoice.started + ' - ' + this.invoice.ended,
+      y: y
+    }); y += step;
+
+    pdfList.push({
+      label: 'Duration:',
+      value: this.invoice.duration + ' hrs',
+      y: y
+    }); y += step;
+
+    pdfList.push({
+      label: 'Rate:',
+      value: this.invoice.rate + '$ per hour',
+      y: y
+    }); y += step;
+
+    if (this.invoice.feeP || this.invoice.feeC) {
+      pdfList.push({
+        label: 'Hours USD:',
+        value: this.invoice.totalBeforeFee + '$',
+        y: y
+      }); y += step;
+      if (this.invoice.feeP) {
+        pdfList.push({
+          label: '% fee:',
+          value: '- 1%',
+          y: y
+        }); y += step;
+      }
+      if (this.invoice.feeC) {
+        pdfList.push({
+          label: '$ fee:',
+          value: '- 10$',
+          y: y
+        }); y += step;
+      }
+    }
+
+    pdfList.push({
+      label: 'Total USD:',
+      value: this.invoice.totalUsd + '$',
+      y: y
+    }); y += 37;
+
+    pdfList.push({
+      label: this.invoice.label + ' price:',
+      value: this.price + '$',
+      y: y
+    }); y += step;
+
+    pdfList.push({
+      label: 'TOTAL:',
+      value: this.total + ' ' + this.invoice.label,
+      y: y
+    }); y += 49;
+
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'pt',
-      format: [675, 422],
+      format: [675, y + 50],
     });
 
     doc.setFontSize(40);
     doc.setTextColor('#333');
-    doc.text('Invoice', 35, 71);
+    doc.text('Invoice', 30, 71);
 
     doc.setFontSize(15);
-    doc.text('Invoice #:', 35, 112);
-    doc.text(this.id, 135, 112);
-    doc.text('Description:', 35, 140);
-    doc.text('Web Development', 135, 140);
+    doc.text('Invoice #:', 30, 112);
+    doc.text(this.id, 130, 112);
+    doc.text('Description:', 30, 140);
+    doc.text('Web Development', 130, 140);
 
-    doc.text('From:', 470, 112);
-    doc.text(this.invoice.from, 520, 112);
-    doc.text('Bill to:', 470, 140);
-    doc.text(this.invoice.billTo, 520, 140);
+    doc.text('From:', 465, 112);
+    doc.text(this.invoice.from, 515, 112);
+    doc.text('Bill to:', 465, 140);
+    doc.text(this.invoice.billTo, 515, 140);
 
     doc.setDrawColor('#d81313');
     doc.setFillColor('#d81313');
-    doc.rect(35, 155, 614, 2, 'F');
+    doc.rect(30, 155, 614, 2, 'F');
 
-    doc.text('Milestone:', 82, 180);
-    doc.text(this.invoice.started + ' - ' + this.invoice.ended, 182, 180);
-    doc.text('Duration:', 82, 207);
-    doc.text(this.invoice.duration + ' hrs', 182, 207);
-    doc.text('Rate:', 82, 234);
-    doc.text(this.invoice.rate + '$ per hour', 182, 234);
-    doc.text('Total USD:', 82, 261);
-    doc.text(this.invoice.totalUsd + '$', 182, 261);
-    doc.text('Litecoin price:', 82, 300);
-    doc.text(this.litecoinPrice + '$', 182, 300);
-    doc.text('TOTAL:', 82, 327);
-    doc.text(this.total + ' LTC', 182, 327);
-    doc.text('Send to: ' + this.invoice.address, 35, 372);
-    doc.text('before ' + this.invoice.before, 35, 389);
-    doc.text('Sent: ' + this.sent, 490, 389);
+    pdfList.forEach(pdf => {
+      doc.text(pdf.label, 77, pdf.y);
+      doc.text(pdf.value, 177, pdf.y);
+    });
 
-    doc.addImage('/assets/webdevelopland.png', 'PNG', 570, 15, 70, 70,);
+    doc.text('Send to: ' + this.invoice.address, 30, y);
+    y += 20;
+    doc.text('before ' + this.invoice.before, 30, y);
+    doc.text('Sent: ' + this.sent, 475, y);
+
+    doc.addImage('/assets/webdevelopland.png', 'PNG', 570, 20, 70, 70);
 
     doc.save(this.id + '.pdf');
   }

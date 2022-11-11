@@ -30,6 +30,16 @@
         <label>Total USD:</label>
         <div class="value">{{ milestone.usd }}$</div>
       </div>
+      <ng-container *ngIf="isCurrent && !isRatesError">
+        <div class="card">
+          <label>{{ milestone.label }} price:</label>
+          <div class="value">{{ price }}$</div>
+        </div>
+        <div class="card">
+          <label>Total {{ milestone.label }}:</label>
+          <div class="value">{{ milestone.crypto }}</div>
+        </div>
+      </ng-container>
     </div>
     <div class="activity" *ngIf="activity">
       <div class="time">

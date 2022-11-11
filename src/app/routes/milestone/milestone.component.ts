@@ -9,6 +9,8 @@ import {
   timestampToDate,
   timestampToDays,
   timestampToTimeDate,
+  cround,
+  calculate,
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 import { Activity, Week, Day, Six, Hour } from './activity.interface';
@@ -21,6 +23,8 @@ class Milestone {
   tracked: string;
   rate: number;
   usd: number;
+  crypto: number;
+  label: string;
 }
 
 const HOUR: number = 1000 * 60 * 60;
@@ -34,6 +38,8 @@ const MINUTE: number = 1000 * 60;
 export class MilestoneComponent implements OnDestroy {
   id: string;
   isCurrent: boolean;
+  isRatesError: boolean = false;
+  price: number;
   protoMilestone: Proto.Milestone;
   invoice: Proto.Invoice;
   milestone = new Milestone();
@@ -62,14 +68,12 @@ export class MilestoneComponent implements OnDestroy {
       this.loadSettings(data[0]);
       this.loadMilestone(data[1]);
       if (this.isCurrent) {
-        this.loadingService.isLoading = false;
-        this.readMilestone();
+        this.calculate();
       } else {
         this.getSub = this.firebaseService.getInvoice(this.id).subscribe(invoice => {
           this.getSub.unsubscribe();
           this.invoice = invoice;
-          this.loadingService.isLoading = false;
-          this.readMilestone();
+          this.calculate();
         });
       }
     });
@@ -90,9 +94,11 @@ export class MilestoneComponent implements OnDestroy {
 
   loadSettings(settings: Proto.Settings): void {
     this.settings = settings;
+    this.milestone.label = this.settings.getCryptocurrency();
   }
 
-  readMilestone(): void {
+  readMilestone(price: number): void {
+    this.price = Math.round(price);
     this.milestone.started = timestampToTimeDate(this.protoMilestone.getStartedMs());
     if (!this.isCurrent) {
       const duration = this.protoMilestone.getEndedMs() - this.protoMilestone.getStartedMs();
@@ -109,10 +115,25 @@ export class MilestoneComponent implements OnDestroy {
       const tracked: number = this.countTrackedTime();
       const hours: number = tracked / HOUR;
       this.milestone.usd = Math.round(this.settings.getRate() * hours);
+      this.milestone.crypto = cround(this.settings.getRate() * hours / price, this.milestone.label);
       this.milestone.ended = '-';
       this.milestone.rate = this.settings.getRate();
       this.createHours(this.protoMilestone.getStartedMs(), Date.now());
     }
+  }
+
+  calculate(): void {
+    this.loadingService.isLoading = true;
+    this.isRatesError = false;
+    calculate(this.settings.getCryptocurrency()).subscribe(price => {
+      this.readMilestone(price);
+      this.loadingService.isLoading = false;
+    }, () => {
+      this.notificationService.error('Invalid cryptocurrency rates');
+      this.readMilestone(1);
+      this.isRatesError = true;
+      this.loadingService.isLoading = false;
+    });
   }
 
   countTrackedTime(): number {

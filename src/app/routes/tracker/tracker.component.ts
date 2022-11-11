@@ -133,9 +133,11 @@ export class TrackerComponent implements OnDestroy {
     invoice.setStartedMs(this.milestone.getStartedMs());
     invoice.setEndedMs(this.milestone.getEndedMs());
     invoice.setDurationMs(this.milestoneTimer.display());
-    invoice.setRate(this.settings.getRate());
     invoice.setStable('USD');
-    invoice.setCryptocurrency('LTC');
+    invoice.setCryptocurrency(this.settings.getCryptocurrency());
+    invoice.setRate(this.settings.getRate());
+    invoice.setFeeP(this.settings.getFeeP());
+    invoice.setFeeC(this.settings.getFeeC());
     this.invoiceSub = this.firebaseService.setInvoice(invoice).subscribe();
   }
 
