@@ -240,7 +240,7 @@ export class MilestoneComponent implements OnDestroy {
         week.hours = 0;
         week.money = 0;
       }
-      
+
       const progress = hour.duration / HOUR;
       if (progress > 0) {
         hour.progress = 0.2 + progress;
@@ -253,18 +253,18 @@ export class MilestoneComponent implements OnDestroy {
     }
   }
 
-  showHour(hour: Hour): void {
-    console.log('Hour: ' + timestampToTime(hour.duration));
+  getHour(hour: Hour): string {
+    return timestampToTime(hour.duration);
   }
 
-  showDay(day: Day): void {
+  getDay(day: Day): string {
     let duration = 0;
     for (const six of day.quarters) {
       for (const hour of six.hours) {
         duration += hour.duration;
       }
     }
-    console.log('Day: ' + timestampToTime(duration));
+    return timestampToTime(duration) + ' hrs';
   }
 
   round(n) {
