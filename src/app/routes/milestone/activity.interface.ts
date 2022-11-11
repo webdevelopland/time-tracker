@@ -6,7 +6,7 @@ export class Week {
   days: Day[] = [];
   hours: number;
   hrs: string;
-  money: number;
+  usd: number;
 }
 
 export class Day {
