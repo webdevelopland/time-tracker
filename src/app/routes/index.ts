@@ -6,3 +6,4 @@ export * from './invoice';
 export * from './invoices';
 export * from './milestones';
 export * from './milestone';
+export * from './bubble';

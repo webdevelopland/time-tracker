@@ -16,7 +16,6 @@ import {
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 import { Activity, Week, Day, Six, Hour, Milestone, Bubble } from './activity.interface';
 
-
 const HOUR: number = 1000 * 60 * 60;
 const MINUTE: number = 1000 * 60;
 
