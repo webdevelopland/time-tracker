@@ -180,7 +180,7 @@ export class MilestoneComponent implements OnDestroy {
     let i = 0;
     for (const bubble of this.protoMilestone.getBubbleList()) {
       this.bubbles.push({
-        label: '' + addZero(++i),
+        label: addZero(++i),
         url: '/bubble/' + this.id + '/' + i,
       });
       bubble.getSessionList().forEach(session => {
