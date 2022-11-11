@@ -65,7 +65,7 @@ export class FirebaseService {
   setSettings(settings: Proto.Settings): Observable<void> {
     return new Observable(observer => {
       this.db.collection('/settings')
-        .doc('dev')
+        .doc('settings')
         .set({
           proto: this.encodingService.uint8ArrayToBase64(settings.serializeBinary()),
         })
@@ -76,7 +76,7 @@ export class FirebaseService {
 
   getSettings(): Observable<Proto.Settings> {
     return this.db.collection('/settings')
-      .doc('dev')
+      .doc('settings')
       .snapshotChanges()
       .pipe(
         map(action => {
@@ -94,7 +94,7 @@ export class FirebaseService {
 
   getMilestone(): Observable<Proto.Milestone> {
     return this.db.collection('/milestone')
-      .doc('dev')
+      .doc('current')
       .snapshotChanges()
       .pipe(
         map(action => {
@@ -113,7 +113,7 @@ export class FirebaseService {
   setMilestone(milestone: Proto.Milestone): Observable<void> {
     return new Observable(observer => {
       this.db.collection('/milestone')
-        .doc('dev')
+        .doc('current')
         .set({
           proto: this.encodingService.uint8ArrayToBase64(milestone.serializeBinary()),
         })

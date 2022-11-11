@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 const MaterialImports = [
   MatButtonModule,
@@ -16,6 +17,7 @@ const MaterialImports = [
   MatDialogModule,
   MatSnackBarModule,
   MatSlideToggleModule,
+  MatTooltipModule,
 ];
 
 @NgModule({

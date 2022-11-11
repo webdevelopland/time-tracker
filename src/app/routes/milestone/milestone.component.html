@@ -52,10 +52,19 @@
           <div class="date">{{ day.date }}</div>
           <div class="quarter" *ngFor="let quarter of day.quarters">
             <div class="hour" *ngFor="let hour of quarter.hours">
-              <div class="status" [style.opacity]="hour.progress"></div>
+              <div class="status"
+                [style.opacity]="hour.progress"
+                [matTooltip]="hour.hrs"
+              ></div>
             </div>
           </div>
-          <div class="weekday">{{ day.label }}</div>
+          <div class="weekday"
+            [matTooltip]="day.hrs"
+            matTooltipPosition="right"
+          >{{ day.label }}</div>
+        </div>
+        <div class="week-info">
+          {{ week.hrs }} hrs, {{ week.usd }}$
         </div>
       </div>
     </div>

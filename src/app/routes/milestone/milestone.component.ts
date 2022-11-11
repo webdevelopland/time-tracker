@@ -9,7 +9,7 @@ import {
   timestampToDate,
   timestampToDays,
   timestampToTimeDate,
-  cround,
+  round, cround,
   calculate,
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
@@ -191,13 +191,17 @@ export class MilestoneComponent implements OnDestroy {
       bubble.getSessionList().forEach(session => {
         let start: number = session.getStartedMs();
         for (const hour of hours) {
+          if (!hour.duration) {
+            hour.duration = 0;
+          }
           const hourEnded: number = hour.started + HOUR;
           if (hour.started <= start && start < hourEnded) {
             if (hourEnded <= session.getEndedMs()) {
-              hour.duration = hourEnded - start;
+              hour.duration += hourEnded - start;
               start = hourEnded;
             } else {
-              hour.duration = session.getEndedMs() - start;
+              hour.duration += session.getEndedMs() - start;
+              break;
             }
           }
         }
@@ -210,8 +214,12 @@ export class MilestoneComponent implements OnDestroy {
     let week = new Week();
     let day = new Day();
     const quarter: Six = { hours: [] };
+    week.hours = 0;
+    week.usd = 0;
     for (const hour of hours) {
+      hour.hrs = this.getHour(hour);
       quarter.hours.push(hour);
+      week.hours += hour.duration;
       if (hour.isQuarterEnd) {
         day.quarters.push({ hours: quarter.hours });
         quarter.hours = [];
@@ -220,15 +228,45 @@ export class MilestoneComponent implements OnDestroy {
         const date = new Date(hour.started);
         day.label = date.toLocaleDateString('en-US', { weekday: 'long' });
         day.date = timestampToDate(hour.started);
+        day.hrs = this.getDay(day);
         week.days.push(day);
         day = new Day();
       }
       if (hour.isWeekend || hour.isLast) {
+        week.hrs = timestampToTime(week.hours);
+        week.usd = week.hours / HOUR * 40;
+        week.usd = round(week.usd, 2);
         this.activity.weeks.push(week);
+
         week = new Week();
+        week.hours = 0;
+        week.usd = 0;
       }
-      hour.progress = hour.duration / HOUR;
+
+      const progress = hour.duration / HOUR;
+      if (progress > 0) {
+        hour.progress = 0.2 + progress;
+        if (hour.progress > 1) {
+          hour.progress = 1;
+        }
+      } else {
+        hour.progress = 0;
+      }
     }
+  }
+
+  getHour(hour: Hour): string {
+    return timestampToTime(hour.duration);
+  }
+
+  getDay(day: Day): string {
+    let duration = 0;
+    for (const six of day.quarters) {
+      for (const hour of six.hours) {
+        duration += hour.duration;
+      }
+    }
+    return timestampToTime(duration) + ' hrs';
   }
 
   ngOnDestroy() {
