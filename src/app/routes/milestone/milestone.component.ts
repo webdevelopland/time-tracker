@@ -9,7 +9,7 @@ import {
   timestampToDate,
   timestampToDays,
   timestampToTimeDate,
-  cround,
+  round, cround,
   calculate,
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
@@ -231,10 +231,10 @@ export class MilestoneComponent implements OnDestroy {
         day = new Day();
       }
       if (hour.isWeekend || hour.isLast) {
-        this.activity.weeks.push(week);
         week.hoursString = timestampToTime(week.hours);
         week.money = week.hours / HOUR * 40;
-        week.money = this.round(week.money);
+        week.money = round(week.money, 2);
+        this.activity.weeks.push(week);
 
         week = new Week();
         week.hours = 0;
@@ -265,10 +265,6 @@ export class MilestoneComponent implements OnDestroy {
       }
     }
     return timestampToTime(duration) + ' hrs';
-  }
-
-  round(n) {
-    return Math.round(n * 100) / 100;
   }
 
   ngOnDestroy() {
