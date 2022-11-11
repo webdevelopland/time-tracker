@@ -5,7 +5,7 @@ export interface Activity {
 export class Week {
   days: Day[] = [];
   hours: number;
-  hoursString: string;
+  hrs: string;
   money: number;
 }
 
@@ -13,6 +13,7 @@ export class Day {
   label: string;
   date: string;
   quarters: Six[] = [];
+  hrs: string;
 }
 
 export interface Six {
@@ -27,4 +28,5 @@ export class Hour {
   isQuarterEnd: boolean = false;
   isDayEnd: boolean = false;
   isLast: boolean = false;
+  hrs: string;
 }

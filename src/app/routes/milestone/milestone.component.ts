@@ -217,6 +217,7 @@ export class MilestoneComponent implements OnDestroy {
     week.hours = 0;
     week.money = 0;
     for (const hour of hours) {
+      hour.hrs = this.getHour(hour);
       quarter.hours.push(hour);
       week.hours += hour.duration;
       if (hour.isQuarterEnd) {
@@ -227,11 +228,12 @@ export class MilestoneComponent implements OnDestroy {
         const date = new Date(hour.started);
         day.label = date.toLocaleDateString('en-US', { weekday: 'long' });
         day.date = timestampToDate(hour.started);
+        day.hrs = this.getDay(day);
         week.days.push(day);
         day = new Day();
       }
       if (hour.isWeekend || hour.isLast) {
-        week.hoursString = timestampToTime(week.hours);
+        week.hrs = timestampToTime(week.hours);
         week.money = week.hours / HOUR * 40;
         week.money = round(week.money, 2);
         this.activity.weeks.push(week);

@@ -54,17 +54,17 @@
             <div class="hour" *ngFor="let hour of quarter.hours">
               <div class="status"
                 [style.opacity]="hour.progress"
-                [matTooltip]="getHour(hour)"
+                [matTooltip]="hour.hrs"
               ></div>
             </div>
           </div>
           <div class="weekday"
-            [matTooltip]="getDay(day)"
+            [matTooltip]="day.hrs"
             matTooltipPosition="right"
           >{{ day.label }}</div>
         </div>
         <div class="week-info">
-          {{ week.hoursString }} hrs, {{ week.money }}$
+          {{ week.hrs }} hrs, {{ week.money }}$
         </div>
       </div>
     </div>
