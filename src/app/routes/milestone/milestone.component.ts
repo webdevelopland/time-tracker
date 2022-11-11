@@ -191,13 +191,17 @@ export class MilestoneComponent implements OnDestroy {
       bubble.getSessionList().forEach(session => {
         let start: number = session.getStartedMs();
         for (const hour of hours) {
+          if (!hour.duration) {
+            hour.duration = 0;
+          }
           const hourEnded: number = hour.started + HOUR;
           if (hour.started <= start && start < hourEnded) {
             if (hourEnded <= session.getEndedMs()) {
-              hour.duration = hourEnded - start;
+              hour.duration += hourEnded - start;
               start = hourEnded;
             } else {
-              hour.duration = session.getEndedMs() - start;
+              hour.duration += session.getEndedMs() - start;
+              break;
             }
           }
         }
@@ -210,8 +214,11 @@ export class MilestoneComponent implements OnDestroy {
     let week = new Week();
     let day = new Day();
     const quarter: Six = { hours: [] };
+    week.hours = 0;
+    week.money = 0;
     for (const hour of hours) {
       quarter.hours.push(hour);
+      week.hours += hour.duration;
       if (hour.isQuarterEnd) {
         day.quarters.push({ hours: quarter.hours });
         quarter.hours = [];
@@ -225,10 +232,43 @@ export class MilestoneComponent implements OnDestroy {
       }
       if (hour.isWeekend || hour.isLast) {
         this.activity.weeks.push(week);
+        week.hoursString = timestampToTime(week.hours);
+        week.money = week.hours / HOUR * 40;
+        week.money = this.round(week.money);
+
         week = new Week();
+        week.hours = 0;
+        week.money = 0;
       }
-      hour.progress = hour.duration / HOUR;
+      
+      const progress = hour.duration / HOUR;
+      if (progress > 0) {
+        hour.progress = 0.2 + progress;
+        if (hour.progress > 1) {
+          hour.progress = 1;
+        }
+      } else {
+        hour.progress = 0;
+      }
     }
+  }
+
+  showHour(hour: Hour): void {
+    console.log('Hour: ' + timestampToTime(hour.duration));
+  }
+
+  showDay(day: Day): void {
+    let duration = 0;
+    for (const six of day.quarters) {
+      for (const hour of six.hours) {
+        duration += hour.duration;
+      }
+    }
+    console.log('Day: ' + timestampToTime(duration));
+  }
+
+  round(n) {
+    return Math.round(n * 100) / 100;
   }
 
   ngOnDestroy() {

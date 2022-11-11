@@ -4,6 +4,9 @@ export interface Activity {
 
 export class Week {
   days: Day[] = [];
+  hours: number;
+  hoursString: string;
+  money: number;
 }
 
 export class Day {
