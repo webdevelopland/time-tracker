@@ -1,0 +1,15 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header panel">
+    <a class="active-button" [routerLink]="['/milestone', id]">Back</a>
+  </div>
+  <div class="id fixed">{{ id }}, Bubble {{ n }}</div>
+  <div class="sessions">
+    <div class="session" *ngFor="let session of sessions">
+      <div class="index">{{ session.index }}.</div>
+      <div class="time">{{ session.start }} - {{ session.end }}</div>
+      <div class="duration">{{ session.duration }} hrs</div>
+      <div class="date">{{ session.date }}</div>
+    </div>
+  </div>
+  <div class="total fixed">{{ bubbleTime }}</div>
+</div>

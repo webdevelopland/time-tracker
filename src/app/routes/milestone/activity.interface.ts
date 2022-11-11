@@ -30,3 +30,20 @@ export class Hour {
   isLast: boolean = false;
   hrs: string; // 0:34
 }
+
+export class Milestone {
+  id: string;
+  started: string;
+  ended: string;
+  duration: string;
+  tracked: string;
+  rate: number;
+  usd: number;
+  crypto: number;
+  label: string;
+}
+
+export interface Bubble {
+  label: string;
+  url: string;
+}

@@ -5,41 +5,49 @@
   </div>
   <div class="fixed">{{ id }}</div>
   <div class="body">
-    <div class="stats">
-      <div class="card">
-        <label>Started:</label>
-        <div class="value">{{ milestone.started }}</div>
-      </div>
-      <div class="card">
-        <label>Ended:</label>
-        <div class="value">{{ milestone.ended }}</div>
-      </div>
-      <div class="card">
-        <label>Duration:</label>
-        <div class="value">{{ milestone.duration }}</div>
-      </div>
-      <div class="card">
-        <label>Tracked time:</label>
-        <div class="value">{{ milestone.tracked }} hrs</div>
-      </div>
-      <div class="card">
-        <label>Rate:</label>
-        <div class="value">{{ milestone.rate }}$ per hour</div>
-      </div>
-      <div class="card">
-        <label>Total USD:</label>
-        <div class="value">{{ milestone.usd }}$</div>
-      </div>
-      <ng-container *ngIf="isCurrent && !isRatesError">
+    <div class="header">
+      <div class="stats">
         <div class="card">
-          <label>{{ milestone.label }} price:</label>
-          <div class="value">{{ price }}$</div>
+          <label>Started:</label>
+          <div class="value">{{ milestone.started }}</div>
         </div>
         <div class="card">
-          <label>Total {{ milestone.label }}:</label>
-          <div class="value">{{ milestone.crypto }}</div>
+          <label>Ended:</label>
+          <div class="value">{{ milestone.ended }}</div>
         </div>
-      </ng-container>
+        <div class="card">
+          <label>Duration:</label>
+          <div class="value">{{ milestone.duration }}</div>
+        </div>
+        <div class="card">
+          <label>Tracked time:</label>
+          <div class="value">{{ milestone.tracked }} hrs</div>
+        </div>
+        <div class="card">
+          <label>Rate:</label>
+          <div class="value">{{ milestone.rate }}$ per hour</div>
+        </div>
+        <div class="card">
+          <label>Total USD:</label>
+          <div class="value">{{ milestone.usd }}$</div>
+        </div>
+        <ng-container *ngIf="isCurrent && !isRatesError">
+          <div class="card">
+            <label>{{ milestone.label }} price:</label>
+            <div class="value">{{ price }}$</div>
+          </div>
+          <div class="card">
+            <label>Total {{ milestone.label }}:</label>
+            <div class="value">{{ milestone.crypto }}</div>
+          </div>
+        </ng-container>
+      </div>
+      <div class="bubbles">
+        <div class="title">Bubbles:</div>
+        <ng-container *ngFor="let bubble of bubbles">
+          <a class="active-button" [routerLink]="bubble.url" >{{ bubble.label }}</a>
+        </ng-container>
+      </div>
     </div>
     <div class="activity" *ngIf="activity">
       <div class="time">
