@@ -11,21 +11,11 @@ import {
   timestampToTimeDate,
   round, cround,
   calculate,
+  addZero,
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
-import { Activity, Week, Day, Six, Hour } from './activity.interface';
+import { Activity, Week, Day, Six, Hour, Milestone, Bubble } from './activity.interface';
 
-class Milestone {
-  id: string;
-  started: string;
-  ended: string;
-  duration: string;
-  tracked: string;
-  rate: number;
-  usd: number;
-  crypto: number;
-  label: string;
-}
 
 const HOUR: number = 1000 * 60 * 60;
 const MINUTE: number = 1000 * 60;
@@ -45,6 +35,7 @@ export class MilestoneComponent implements OnDestroy {
   milestone = new Milestone();
   settings: Proto.Settings;
   activity: Activity;
+  bubbles: Bubble[] = [];
   getSub = new Subscription();
 
   constructor(
@@ -187,7 +178,12 @@ export class MilestoneComponent implements OnDestroy {
   }
 
   applySessions(hours: Hour[]): void {
+    let i = 0;
     for (const bubble of this.protoMilestone.getBubbleList()) {
+      this.bubbles.push({
+        label: '' + addZero(++i),
+        url: '/bubble/' + this.id + '/' + i,
+      });
       bubble.getSessionList().forEach(session => {
         let start: number = session.getStartedMs();
         for (const hour of hours) {
