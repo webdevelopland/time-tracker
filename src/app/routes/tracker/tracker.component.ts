@@ -149,7 +149,7 @@ export class TrackerComponent implements OnDestroy {
   tick(): void {
     if (this.isTracking) {
       this.session.setEndedMs(Date.now());
-      getSessions(this.bubble);
+      this.sessions = getSessions(this.bubble);
       this.sessionTime = timestampToFullTime(this.sessionTimer.display());
     } else {
       this.sessionTime = timestampToTime(this.breakTimer.display());
@@ -257,14 +257,14 @@ export class TrackerComponent implements OnDestroy {
     this.session = session;
     this.bubble.addSession(session);
     this.milestone.setBreakMs(Date.now());
-    getSessions(this.bubble);
+    this.sessions = getSessions(this.bubble);
     this.save();
   }
 
   endSession(): void {
     if (this.session) {
       this.session.setEndedMs(Date.now());
-      getSessions(this.bubble);
+      this.sessions = getSessions(this.bubble);
       this.session = undefined;
     }
   }
