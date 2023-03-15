@@ -2,7 +2,7 @@
   "name": "time-tracker",
   "scripts": {
     "start": "ng build --configuration dev --watch",
-    "live": "ng serve",
+    "live": "ng serve --live-reload=false",
     "build": "ng build --configuration prod",
     "lint": "ng lint",
     "lint-fix": "ng lint --fix",
