@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { randstr64 } from 'rndmjs';
 
 import * as Proto from 'src/proto';
 import { EncodingService } from './encoding.service';
@@ -110,10 +111,22 @@ export class FirebaseService {
       );
   }
 
-  setMilestone(milestone: Proto.Milestone): Observable<void> {
+  setMilestone(milestone: Proto.Milestone, doc: string = 'current'): Observable<void> {
     return new Observable(observer => {
       this.db.collection('/milestone')
-        .doc('current')
+        .doc(doc)
+        .set({
+          proto: this.encodingService.uint8ArrayToBase64(milestone.serializeBinary()),
+        })
+        .then(() => observer.next())
+        .catch(() => observer.error());
+    });
+  }
+
+  moveToBin(milestone: Proto.Milestone) : Observable<void> {
+    return new Observable(observer => {
+      this.db.collection('/bin')
+        .doc(milestone.getId() + '-' + randstr64(8))
         .set({
           proto: this.encodingService.uint8ArrayToBase64(milestone.serializeBinary()),
         })

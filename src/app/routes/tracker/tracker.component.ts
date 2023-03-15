@@ -38,6 +38,7 @@ export class TrackerComponent implements OnDestroy {
   autosaveSub = new Subscription();
   invoiceSub = new Subscription();
   milestoneSub = new Subscription();
+  backupSub = new Subscription();
   sessionTimer = new Timer();
   breakTimer = new Timer();
   bubbleTimer = new Timer();
@@ -54,16 +55,11 @@ export class TrackerComponent implements OnDestroy {
   ) {
     this.loadingService.isLoading = true;
     this.load();
-    this.ticking();
   }
 
   loadMilestone(milestone: Proto.Milestone): void {
-    if (milestone) {
-      this.milestone = milestone;
-      this.readMilestone();
-    } else {
-      this.createNewMilestone();
-    }
+    this.milestone = milestone;
+    this.readMilestone();
     this.tick();
   }
 
@@ -77,9 +73,14 @@ export class TrackerComponent implements OnDestroy {
       this.firebaseService.getMilestone(),
     ).subscribe(data => {
       this.getSub.unsubscribe();
-      this.loadSettings(data[0]);
-      this.loadMilestone(data[1]);
-      this.loadingService.isLoading = false;
+      if (!data || !data[0] || !data[1]) {
+        this.notificationService.crash('Bad data from the DB');
+      } else {
+        this.loadSettings(data[0]);
+        this.loadMilestone(data[1]);
+        this.loadingService.isLoading = false;
+        this.ticking();
+      }
     });
   }
 
@@ -87,8 +88,12 @@ export class TrackerComponent implements OnDestroy {
     if (this.milestone) {
       this.milestone.setEndedMs(Date.now());
       if (save) {
+        this.saveBackup('backup-invoice');
         this.addInvoice();
         this.milestoneSub = this.firebaseService.saveMilestone(this.milestone).subscribe();
+      } else {
+        this.saveBackup('backup-bin');
+        this.milestoneSub = this.firebaseService.moveToBin(this.milestone).subscribe();
       }
     }
     this.milestone = new Proto.Milestone();
@@ -107,6 +112,7 @@ export class TrackerComponent implements OnDestroy {
     this.session = undefined;
     if (this.bubble) {
       this.bubble.setEndedMs(Date.now());
+      this.saveBackup('backup-bubble');
     }
     this.bubbleTimer.destroy();
     this.bubble = new Proto.Bubble();
@@ -142,6 +148,7 @@ export class TrackerComponent implements OnDestroy {
           this.session.setEndedMs(Date.now());
         }
         this.save();
+        this.backup();
       }
     });
   }
@@ -290,7 +297,20 @@ export class TrackerComponent implements OnDestroy {
       });
   }
 
+  backup(): void {
+    const minutes: number = (new Date).getMinutes();
+    if (minutes === 0) {
+      this.saveBackup('backup-hour');
+    }
+  }
+
+  saveBackup(doc: string): void {
+    this.backupSub.unsubscribe();
+    this.backupSub = this.firebaseService.setMilestone(this.milestone, doc).subscribe();
+  }
+
   save(): void {
+    this.saveBackup('backup-save');
     this.setSub = this.firebaseService.setMilestone(this.milestone).subscribe(
       () => {},
       () => {
@@ -305,5 +325,6 @@ export class TrackerComponent implements OnDestroy {
     this.timerSub.unsubscribe();
     this.autosaveSub.unsubscribe();
     this.milestoneSub.unsubscribe();
+    this.backupSub.unsubscribe();
   }
 }
