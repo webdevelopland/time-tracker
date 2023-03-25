@@ -1,0 +1,17 @@
+<div class="page" *ngIf="!loadingService.isLoading">
+  <div class="header panel">
+    <a class="active-button" [routerLink]="['/milestone', id]">Back</a>
+  </div>
+  <div class="id fixed">{{ id }}</div>
+  <div class="chart">
+    <canvas id="chart-tracked"></canvas>
+    <canvas id="chart-limit"></canvas>
+  </div>
+  <div class="step fixed" *ngIf="isCurrent">
+    <input maxlength="2" [(ngModel)]="step">
+  </div>
+  <div class="footer panel" *ngIf="isCurrent">
+    <a class="active-button" (click)="simulate()">Simulate</a>
+    <a class="active-button" (click)="clear()">Clear</a>
+  </div>
+</div>

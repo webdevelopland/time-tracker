@@ -1,0 +1,58 @@
+@import 'styles/variables';
+
+.page {
+  >.panel {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
+    >.active-button {
+      display: block;
+      padding: 6px 20px;
+      box-sizing: border-box;
+    }
+  }
+  >.id {
+    z-index: 5;
+  }
+  >.fixed {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 18px;
+  }
+  >.step {
+    z-index: 11;
+    text-align: center;
+    left: 150px;
+    width: calc(100% - 300px);
+    input {
+      width: 50px;
+      text-align: center;
+    }
+  }
+  >.id {
+    top: 0;
+    text-transform: capitalize;
+  }
+  >.chart {
+    padding: 30px;
+    box-sizing: border-box;
+    height: calc(100% - 50px - 50px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    canvas {
+      width: 100%;
+      background: white;
+    }
+  }
+}
