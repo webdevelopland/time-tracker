@@ -15,6 +15,7 @@ import {
   MilestonesComponent,
   MilestoneComponent,
   BubbleComponent,
+  ChartComponent,
 } from '@/routes';
 import { CoreModule } from './core/core.module';
 import { FirebaseModule } from './import';
@@ -33,6 +34,7 @@ import { LoadingComponent } from './shared/loading';
     MilestonesComponent,
     MilestoneComponent,
     BubbleComponent,
+    ChartComponent,
     LoadingComponent,
   ],
   imports: [

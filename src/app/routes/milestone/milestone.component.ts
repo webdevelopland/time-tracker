@@ -12,6 +12,7 @@ import {
   round, cround,
   calculate,
   addZero,
+  getStatus,
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 import { Activity, Week, Day, Six, Hour, Milestone, Bubble } from './activity.interface';
@@ -99,6 +100,12 @@ export class MilestoneComponent implements OnDestroy {
       this.milestone.tracked = timestampToTime(tracked);
       const hours: number = tracked / HOUR;
       this.milestone.usd = Math.round(this.invoice.getRate() * hours);
+      this.milestone.status = getStatus(
+        tracked,
+        this.protoMilestone.getStartedMs(),
+        this.protoMilestone.getEndedMs(),
+        this.settings.getLimit(),
+      );
       this.createHours(this.protoMilestone.getStartedMs(), this.protoMilestone.getEndedMs());
     } else {
       this.milestone.duration = timestampToDays(Date.now() - this.protoMilestone.getStartedMs());
@@ -108,6 +115,9 @@ export class MilestoneComponent implements OnDestroy {
       this.milestone.crypto = cround(this.settings.getRate() * hours / price, this.milestone.label);
       this.milestone.ended = '-';
       this.milestone.rate = this.settings.getRate();
+      this.milestone.status = getStatus(
+        tracked, this.protoMilestone.getStartedMs(), Date.now(), this.settings.getLimit()
+      );
       this.createHours(this.protoMilestone.getStartedMs(), Date.now());
     }
   }

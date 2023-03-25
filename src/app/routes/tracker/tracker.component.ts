@@ -10,6 +10,7 @@ import {
   Timer,
   timestampToDays,
   getSessions,
+  getStatus,
 } from '@/core/functions';
 import { Session } from '@/core/type';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
@@ -171,12 +172,12 @@ export class TrackerComponent implements OnDestroy {
     if ((Date.now() - this.milestone.getStartedMs()) < 1000 * 60 * 60 * 24) {
       this.statusStyle = 'new';
     } else {
-      const HOUR: number = 1000 * 60 * 60;
-      const totalHoursTracked: number = this.milestoneTimer.display() / HOUR;
-      const totalHoursPassed: number = (Date.now() - this.milestone.getStartedMs()) / HOUR;
-      const limitK: number = this.settings.getLimit() / (24 * 7);
-      const currentK: number = totalHoursTracked / totalHoursPassed;
-      this.status = Math.round(100 * currentK / limitK);
+      this.status = getStatus(
+        this.milestoneTimer.display(),
+        this.milestone.getStartedMs(),
+        Date.now(),
+        this.settings.getLimit()
+      );
       if (this.status < 25) {
         this.statusStyle = 'slow';
       } else if (this.status < 50) {

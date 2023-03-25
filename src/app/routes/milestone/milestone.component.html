@@ -3,7 +3,7 @@
     <a class="active-button" [routerLink]="['/milestones']">Back</a>
     <a class="active-button" [routerLink]="['/invoice', id]" *ngIf="!isCurrent">Invoice</a>
   </div>
-  <div class="fixed">{{ id }}</div>
+  <div class="fixed id">{{ id }}</div>
   <div class="body">
     <div class="header">
       <div class="stats">
@@ -22,6 +22,12 @@
         <div class="card">
           <label>Tracked time:</label>
           <div class="value">{{ milestone.tracked }} hrs</div>
+        </div>
+        <div class="card">
+          <label>Limit:</label>
+          <div class="value link">
+            <a class="active-button" [routerLink]="['/chart', id]">{{ milestone.status }}%</a>
+          </div>
         </div>
         <div class="card">
           <label>Rate:</label>
@@ -45,7 +51,7 @@
       <div class="bubbles">
         <div class="title">Bubbles:</div>
         <ng-container *ngFor="let bubble of bubbles">
-          <a class="active-button" [routerLink]="bubble.url" >{{ bubble.label }}</a>
+          <a class="active-button" [routerLink]="bubble.url">{{ bubble.label }}</a>
         </ng-container>
       </div>
     </div>

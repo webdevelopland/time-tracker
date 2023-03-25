@@ -41,6 +41,7 @@ export class Milestone {
   usd: number;
   crypto: number;
   label: string;
+  status: number;
 }
 
 export interface Bubble {

@@ -12,6 +12,7 @@ import {
   MilestonesComponent,
   MilestoneComponent,
   BubbleComponent,
+  ChartComponent,
 } from '@/routes';
 import { AuthGuard } from '@/core/services';
 
@@ -29,6 +30,7 @@ const appRoutes: Routes = [
       { path: 'milestones', component: MilestonesComponent },
       { path: 'milestone/:id', component: MilestoneComponent },
       { path: 'bubble/:id/:n', component: BubbleComponent },
+      { path: 'chart/:id', component: ChartComponent },
     ],
   },
   { path: '**', component: LoginComponent },
