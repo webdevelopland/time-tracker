@@ -1,67 +1,83 @@
 <div class="page" *ngIf="!loadingService.isLoading">
   <div class="header panel">
     <a class="active-button" [routerLink]="['/milestones']">Back</a>
-    <a class="active-button" [routerLink]="['/invoice', id]" *ngIf="!isCurrent">Invoice</a>
+    <div class="active-button" (click)="action()" *ngIf="authService.isAdmin && state.isCurrent">
+      Action
+    </div>
   </div>
-  <div class="fixed id">{{ id }}</div>
+  <div class="fixed id">{{ state.id }}</div>
   <div class="body">
     <div class="header">
       <div class="stats">
         <div class="card">
           <label>Started:</label>
-          <div class="value">{{ milestone.started }}</div>
+          <div class="value">{{ state.milestone.started }}</div>
         </div>
         <div class="card">
           <label>Ended:</label>
-          <div class="value">{{ milestone.ended }}</div>
+          <div class="value">{{ state.milestone.ended }}</div>
         </div>
         <div class="card">
           <label>Duration:</label>
-          <div class="value">{{ milestone.duration }}</div>
+          <div class="value">{{ state.milestone.duration }}</div>
         </div>
         <div class="card">
           <label>Tracked time:</label>
-          <div class="value">{{ milestone.tracked }} hrs</div>
+          <div class="value">{{ state.milestone.tracked }} hrs</div>
         </div>
         <div class="card">
           <label>Limit:</label>
           <div class="value link">
-            <a class="active-button" [routerLink]="['/chart', id]">{{ milestone.status }}%</a>
+            <a class="active-button" [routerLink]="['/chart', state.id]">
+              {{ state.milestone.status }}%
+            </a>
           </div>
         </div>
         <div class="card">
           <label>Rate:</label>
-          <div class="value">{{ milestone.rate }}$ per hour</div>
+          <div class="value">{{ state.milestone.rate }}$ per hour</div>
         </div>
         <div class="card">
-          <label>Total USD:</label>
-          <div class="value">{{ milestone.usd }}$</div>
+          <label>USD:</label>
+          <div class="value">{{ state.milestone.usd }}$</div>
         </div>
-        <ng-container *ngIf="isCurrent && !isRatesError">
-          <div class="card">
-            <label>{{ milestone.label }} price:</label>
-            <div class="value">{{ price }}$</div>
+        <ng-container *ngIf="state.isCurrent && !isRatesError">
+          <div class="card" *ngIf="state.milestone.usd !== state.milestone.left">
+            <label>USD left:</label>
+            <div class="value">{{ state.milestone.left }}$</div>
           </div>
           <div class="card">
-            <label>Total {{ milestone.label }}:</label>
-            <div class="value">{{ milestone.crypto }}</div>
+            <label>{{ state.milestone.label }}:</label>
+            <div class="value">{{ state.milestone.crypto }}</div>
+          </div>
+          <div class="card">
+            <label>{{ state.milestone.label }} price:</label>
+            <div class="value">{{ state.price }}$</div>
           </div>
         </ng-container>
       </div>
       <div class="bubbles">
+        <ng-container *ngIf="state.invoices.length > 0">
+          <div class="title">Invoices:</div>
+          <ng-container *ngFor="let invoice of state.invoices">
+            <a class="active-button" [routerLink]="invoice.url">{{ invoice.label }}</a>
+          </ng-container>
+          <div class="placeholder"></div>
+        </ng-container>
+
         <div class="title">Bubbles:</div>
-        <ng-container *ngFor="let bubble of bubbles">
+        <ng-container *ngFor="let bubble of state.bubbles">
           <a class="active-button" [routerLink]="bubble.url">{{ bubble.label }}</a>
         </ng-container>
       </div>
     </div>
-    <div class="activity" *ngIf="activity">
+    <div class="activity" *ngIf="state.activity">
       <div class="time">
         <div class="six">6:00</div>
         <div class="twelve">12:00</div>
         <div class="eighteen">18:00</div>
       </div>
-      <div class="week" *ngFor="let week of activity.weeks">
+      <div class="week" *ngFor="let week of state.activity.weeks">
         <div class="day" *ngFor="let day of week.days">
           <div class="date">{{ day.date }}</div>
           <div class="quarter" *ngFor="let quarter of day.quarters">
@@ -77,7 +93,7 @@
             matTooltipPosition="right"
           >{{ day.label }}</div>
         </div>
-        <div class="week-info">
+        <div class="week-info" *ngIf="week.usd > 0">
           {{ week.hrs }} hrs, {{ week.usd }}$
         </div>
       </div>

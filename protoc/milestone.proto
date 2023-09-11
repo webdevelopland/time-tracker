@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package wakka.common.tracker;
+package milestone;
 
 message Milestone {
   string id = 1;

@@ -1,8 +1,8 @@
 import * as Proto from 'src/proto';
 import { Session } from '@/core/type';
 import {
+  timestampToDuration,
   timestampToTime,
-  timestampToDateTime,
   timestampToDate,
 } from '@/core/functions';
 
@@ -31,9 +31,9 @@ export function getSessions(bubble: Proto.Bubble, cb?: Function): Session[] {
     }
     sessions.push({
       index: n,
-      start: timestampToDateTime(start),
-      end: timestampToDateTime(session.getEndedMs()),
-      duration: timestampToTime(sessionDuration),
+      start: timestampToTime(start),
+      end: timestampToTime(session.getEndedMs()),
+      duration: timestampToDuration(sessionDuration),
       date: getSessionDate(session, sessionList[index - 1], n),
     });
     start = undefined;

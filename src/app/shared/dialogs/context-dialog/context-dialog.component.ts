@@ -11,15 +11,15 @@ export class ContextDialogComponent {
     private dialogRef: MatDialogRef<ContextDialogComponent>,
   ) { }
 
-  save(): void {
-    this.dialogRef.close('save');
+  add(): void {
+    this.dialogRef.close('add');
+  }
+
+  end(): void {
+    this.dialogRef.close('end');
   }
 
   reset(): void {
     this.dialogRef.close('reset');
-  }
-
-  close(): void {
-    this.dialogRef.close();
   }
 }

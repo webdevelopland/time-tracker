@@ -113,8 +113,22 @@
   >.footer {
     align-items: flex-end;
     >.duration {
-      color: white;
       font-size: 30px;
+      &.normal {
+        color: white;
+      }
+      &.warning {
+        color: #f4bf0c;
+        font-weight: bold;
+      }
+      &.stop {
+        background: #d81313;
+        color: white;
+        border-radius: 9px;
+        font-weight: bold;
+        padding: 2px 10px;
+        box-sizing: border-box;
+      }
     }
   }
   >.milestone {

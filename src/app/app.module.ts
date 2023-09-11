@@ -13,7 +13,7 @@ import {
   InvoiceComponent,
   InvoicesComponent,
   MilestonesComponent,
-  MilestoneComponent,
+  MilestoneModule,
   BubbleComponent,
   ChartComponent,
 } from '@/routes';
@@ -32,7 +32,6 @@ import { LoadingComponent } from './shared/loading';
     InvoiceComponent,
     InvoicesComponent,
     MilestonesComponent,
-    MilestoneComponent,
     BubbleComponent,
     ChartComponent,
     LoadingComponent,
@@ -45,6 +44,7 @@ import { LoadingComponent } from './shared/loading';
     SharedModule,
     FirebaseModule,
     HttpClientModule,
+    MilestoneModule,
   ],
   bootstrap: [AppComponent],
 })

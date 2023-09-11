@@ -1,20 +1,19 @@
 import { Component, OnDestroy } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { Subscription, interval, zip } from 'rxjs';
-import { randstr64, randCustomString, numerals } from 'rndmjs';
+import { randstr64 } from 'rndmjs';
 
 import * as Proto from 'src/proto';
 import {
-  timestampToTime,
-  timestampToFullTime,
+  timestampToDuration,
+  timestampToDurationFull,
   Timer,
   timestampToDays,
   getSessions,
   getStatus,
+  DAY
 } from '@/core/functions';
 import { Session } from '@/core/type';
-import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
-import { ContextDialogComponent, ConfirmDialogComponent } from '@/shared/dialogs';
+import { LoadingService, FirebaseService, NotificationService, AuthService } from '@/core/services';
 
 @Component({
   selector: 'page-tracker',
@@ -32,13 +31,12 @@ export class TrackerComponent implements OnDestroy {
   sessions: Session[] = [];
   status: number;
   statusStyle: string;
+  durationStyle: string;
   isTracking: boolean = false;
   getSub = new Subscription();
   setSub = new Subscription();
   timerSub = new Subscription();
   autosaveSub = new Subscription();
-  invoiceSub = new Subscription();
-  milestoneSub = new Subscription();
   backupSub = new Subscription();
   sessionTimer = new Timer();
   breakTimer = new Timer();
@@ -50,9 +48,9 @@ export class TrackerComponent implements OnDestroy {
 
   constructor(
     public loadingService: LoadingService,
+    public authService: AuthService,
     private firebaseService: FirebaseService,
     private notificationService: NotificationService,
-    private matDialog: MatDialog,
   ) {
     this.loadingService.isLoading = true;
     this.load();
@@ -85,26 +83,6 @@ export class TrackerComponent implements OnDestroy {
     });
   }
 
-  createNewMilestone(save: boolean = true): void {
-    if (this.milestone) {
-      this.milestone.setEndedMs(Date.now());
-      if (save) {
-        this.saveBackup('backup-invoice');
-        this.addInvoice();
-        this.milestoneSub = this.firebaseService.saveMilestone(this.milestone).subscribe();
-      } else {
-        this.saveBackup('backup-bin');
-        this.milestoneSub = this.firebaseService.moveToBin(this.milestone).subscribe();
-      }
-    }
-    this.milestone = new Proto.Milestone();
-    this.milestone.setId('W' + randCustomString(numerals, 13));
-    this.milestone.setStartedMs(Date.now());
-    this.milestone.setBreakMs(Date.now());
-    this.createNewBubble();
-    this.milestoneTimer.destroy();
-  }
-
   createNewBubble(): void {
     if (this.isTracking) {
       this.stop();
@@ -126,20 +104,6 @@ export class TrackerComponent implements OnDestroy {
     this.save();
   }
 
-  addInvoice(): void {
-    const invoice = new Proto.Invoice();
-    invoice.setId(this.milestone.getId());
-    invoice.setStartedMs(this.milestone.getStartedMs());
-    invoice.setEndedMs(this.milestone.getEndedMs());
-    invoice.setDurationMs(this.milestoneTimer.display());
-    invoice.setStable('USD');
-    invoice.setCryptocurrency(this.settings.getCryptocurrency());
-    invoice.setRate(this.settings.getRate());
-    invoice.setFeeP(this.settings.getFeeP());
-    invoice.setFeeC(this.settings.getFeeC());
-    this.invoiceSub = this.firebaseService.setInvoice(invoice).subscribe();
-  }
-
   ticking(): void {
     this.timerSub = interval(1000).subscribe(() => this.tick());
     this.autosaveSub = interval(1000 * 60).subscribe(() => {
@@ -158,13 +122,22 @@ export class TrackerComponent implements OnDestroy {
     if (this.isTracking) {
       this.session.setEndedMs(Date.now());
       this.sessions = getSessions(this.bubble);
-      this.sessionTime = timestampToFullTime(this.sessionTimer.display());
+      this.sessionTime = timestampToDurationFull(this.sessionTimer.display());
     } else {
-      this.sessionTime = timestampToTime(this.breakTimer.display());
+      this.sessionTime = timestampToDuration(this.breakTimer.display());
     }
-    this.bubbleTime = timestampToTime(this.bubbleTimer.display());
-    this.milestoneTime = timestampToTime(this.milestoneTimer.display());
-    this.milestoneDuration = timestampToDays(Date.now() - this.milestone.getStartedMs());
+    this.bubbleTime = timestampToDuration(this.bubbleTimer.display());
+    this.milestoneTime = timestampToDuration(this.milestoneTimer.display());
+    const duration: number = Date.now() - this.milestone.getStartedMs();
+    this.milestoneDuration = timestampToDays(duration);
+    const days: number = duration / DAY;
+    if (days < 100) {
+      this.durationStyle = 'normal';
+    } else if (days < 120) { // Milestone max duration is 120 days
+      this.durationStyle = 'warning';
+    } else {
+      this.durationStyle = 'stop';
+    }
     this.updateStatus();
   }
 
@@ -277,27 +250,6 @@ export class TrackerComponent implements OnDestroy {
     }
   }
 
-  askToReset(): void {
-    this.matDialog.open(ConfirmDialogComponent, {
-      data: { message: 'Reset the milestone?' }
-    })
-      .afterClosed().subscribe(confirm => {
-        if (confirm) {
-          this.createNewMilestone(false);
-        }
-      });
-  }
-
-  askToEnd(): void {
-    this.matDialog.open(ContextDialogComponent, { panelClass: 'context-dialog' })
-      .afterClosed().subscribe(res => {
-        switch (res) {
-          case 'save': this.createNewMilestone(true); break;
-          case 'reset': this.askToReset(); break;
-        }
-      });
-  }
-
   backup(): void {
     const minutes: number = (new Date).getMinutes();
     if (minutes === 0) {
@@ -312,12 +264,9 @@ export class TrackerComponent implements OnDestroy {
 
   save(): void {
     this.saveBackup('backup-save');
-    this.setSub = this.firebaseService.setMilestone(this.milestone).subscribe(
-      () => {},
-      () => {
-        this.notificationService.warning("Action can't be saved");
-      }
-    );
+    this.setSub = this.firebaseService.setMilestone(this.milestone).subscribe({
+      error: () => this.notificationService.warning("Action can't be saved")
+    });
   }
 
   ngOnDestroy() {
@@ -325,7 +274,6 @@ export class TrackerComponent implements OnDestroy {
     this.setSub.unsubscribe();
     this.timerSub.unsubscribe();
     this.autosaveSub.unsubscribe();
-    this.milestoneSub.unsubscribe();
     this.backupSub.unsubscribe();
   }
 }

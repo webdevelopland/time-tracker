@@ -7,10 +7,10 @@
     <canvas id="chart-tracked"></canvas>
     <canvas id="chart-limit"></canvas>
   </div>
-  <div class="step fixed" *ngIf="isCurrent">
+  <div class="step fixed" *ngIf="isCurrent && authService.isAdmin">
     <input maxlength="2" [(ngModel)]="step">
   </div>
-  <div class="footer panel" *ngIf="isCurrent">
+  <div class="footer panel" *ngIf="isCurrent && authService.isAdmin">
     <a class="active-button" (click)="simulate()">Simulate</a>
     <a class="active-button" (click)="clear()">Clear</a>
   </div>

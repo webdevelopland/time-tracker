@@ -72,6 +72,45 @@ class Protoc {
       this.protocFilenameList.push(filename);
       this.protoFileList.push(newPackagePath);
       fs.copySync(originProtoPath, newPackagePath);
+      this.importPackages(originProtoPath, newPackagePath);
+    }
+  }
+
+  // Reads a file and copies its imports to proto folder
+  importPackages(protoPath, newPackagePath) {
+    const protoContent = fs.readFileSync(protoPath, 'utf8');
+    let protoLines = protoContent.split('\n');
+    let doesProtoContainImports = false;
+    for (const lineNumber in protoLines) {
+      const line = protoLines[lineNumber];
+      // Get children paths from imports in code_review.proto
+      if (line.startsWith('import')) {
+        // Everything between quotes
+        const regexExpression = /"(.*)"/;
+        const importRelativePath = line.match(regexExpression)[1];
+
+        if (importRelativePath.startsWith('google')) {
+          // protoc is able to work with google imports by itself.
+          // Unfortunately on unix system only.
+          continue;
+        }
+
+        // Since all files are located in a same directory,
+        // replace each relative import path to filename.
+        // Example:
+        // /path/to/my/file.proto -> file.proto
+        doesProtoContainImports = true;
+        const filename = path.parse(importRelativePath).base;
+        protoLines[lineNumber] = `import "${filename}";`;
+
+        const projectName = path.relative(this.projectPath, protoPath).split('/')[0];
+        const importPath = path.join(this.projectPath, projectName, importRelativePath);
+        this.copyPackage(importPath);
+      }
+    }
+    if (doesProtoContainImports) {
+      // No need to rewrite file, if it doesn't have imports
+      fs.writeFileSync(newPackagePath, protoLines.join('\n'));
     }
   }
 

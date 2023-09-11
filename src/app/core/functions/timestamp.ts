@@ -1,5 +1,10 @@
 import { addZero } from './zero';
 
+export const MINUTE: number = 1000 * 60;
+export const HOUR: number = MINUTE * 60;
+export const DAY: number = HOUR * 24;
+export const WEEK: number = DAY * 7;
+
 interface TimestampTime {
   seconds: number;
   minutes: number;
@@ -15,16 +20,16 @@ interface TimestampDate {
   year: number;
 }
 
-export function getTimestampTime(timestamp: number): TimestampTime {
+export function getTimestampDuration(timestamp: number): TimestampTime {
   const date = new Date(timestamp);
   return {
     seconds: date.getSeconds(),
     minutes: date.getMinutes(),
-    hours: Math.floor(timestamp / (1000 * 60 * 60)),
+    hours: Math.floor(timestamp / HOUR),
   };
 }
 
-export function getTimestampDate(timestamp: number): TimestampDate {
+function getTimestampDate(timestamp: number): TimestampDate {
   const date = new Date(timestamp);
   return {
     seconds: date.getSeconds(),
@@ -36,18 +41,18 @@ export function getTimestampDate(timestamp: number): TimestampDate {
   };
 }
 
-// Time 17:34
-export function timestampToTime(timestamp: number): string {
-  const date: TimestampTime = getTimestampTime(timestamp);
+// Duration 127:34
+export function timestampToDuration(timestamp: number): string {
+  const date: TimestampTime = getTimestampDuration(timestamp);
   let dateString: string = '';
   dateString += date.hours;
   dateString += ':' + addZero(date.minutes);
   return dateString;
 }
 
-// Time 17:34:55
-export function timestampToFullTime(timestamp: number): string {
-  const date: TimestampTime = getTimestampTime(timestamp);
+// Duration 127:34:55
+export function timestampToDurationFull(timestamp: number): string {
+  const date: TimestampTime = getTimestampDuration(timestamp);
   let dateString: string = '';
   dateString += date.hours;
   dateString += ':' + addZero(date.minutes);
@@ -55,8 +60,8 @@ export function timestampToFullTime(timestamp: number): string {
   return dateString;
 }
 
-// Date 17:34
-export function timestampToDateTime(timestamp: number): string {
+// Time 17:34
+export function timestampToTime(timestamp: number): string {
   const date: TimestampDate = getTimestampDate(timestamp);
   let dateString: string = '';
   dateString += date.hours;
@@ -85,12 +90,10 @@ export function timestampToTimeDate(timestamp: number): string {
   return dateString;
 }
 
+// Days 112d 8hrs
 export function timestampToDays(timestamp: number): string {
-  const minutesFloat: number = timestamp / (1000 * 60);
-  const hoursFloat: number = minutesFloat / 60;
-  const daysFloat: number = hoursFloat / 24;
-  const days: number = Math.floor(daysFloat);
-  const hours: number = Math.floor(hoursFloat - days * 24);
+  const days: number = Math.floor(timestamp / DAY);
+  const hours: number = Math.floor(timestamp / HOUR - days * 24);
   let str = '';
   if (days > 0) {
     str += days + 'd ';

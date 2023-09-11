@@ -12,7 +12,7 @@
     <input
       type="text"
       placeholder="LTC"
-      [(ngModel)]="currency"
+      [(ngModel)]="crypto"
       spellcheck=false
     >
   </div>
@@ -34,11 +34,11 @@
     <input type="number" placeholder="$" [(ngModel)]="feeC">
   </div>
   <div class="row">
-    <label>Name</label>
+    <label>From</label>
     <input
       type="text"
       placeholder="Name"
-      [(ngModel)]="name"
+      [(ngModel)]="billFrom"
       spellcheck=false
     >
   </div>
@@ -51,7 +51,7 @@
       spellcheck=false
     >
   </div>
-  <div class="row button">
+  <div class="row button" *ngIf="authService.isAdmin">
     <button class="active-button" (click)="save()">
       Save
     </button>

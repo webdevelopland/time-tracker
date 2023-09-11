@@ -4,21 +4,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { Observable, Subscription, zip } from 'rxjs';
 
 import * as Proto from 'src/proto';
-import {
-  timestampToTime,
-  timestampToDate,
-  timestampToDays,
-  timestampToTimeDate,
-  round, cround,
-  calculate,
-  addZero,
-  getStatus,
-} from '@/core/functions';
-import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
-import { Activity, Week, Day, Six, Hour, Milestone, Bubble } from './activity.interface';
-
-const HOUR: number = 1000 * 60 * 60;
-const MINUTE: number = 1000 * 60;
+import { calculate, addZero } from '@/core/functions';
+import { LoadingService, FirebaseService, NotificationService, AuthService } from '@/core/services';
+import { ContextDialogComponent } from '@/shared/dialogs';
+import { StateService, InvoiceService, MilestoneService } from './services';
 
 @Component({
   selector: 'page-milestone',
@@ -26,255 +15,109 @@ const MINUTE: number = 1000 * 60;
   styleUrls: ['./milestone.component.scss'],
 })
 export class MilestoneComponent implements OnDestroy {
-  id: string;
-  isCurrent: boolean;
   isRatesError: boolean = false;
-  price: number;
-  protoMilestone: Proto.Milestone;
-  invoice: Proto.Invoice;
-  milestone = new Milestone();
-  settings: Proto.Settings;
-  activity: Activity;
-  bubbles: Bubble[] = [];
   getSub = new Subscription();
 
   constructor(
     private matDialog: MatDialog,
     private activatedRoute: ActivatedRoute,
     public loadingService: LoadingService,
+    public authService: AuthService,
     private firebaseService: FirebaseService,
     private notificationService: NotificationService,
+    public state: StateService,
+    private invoiceService: InvoiceService,
+    private milestoneService: MilestoneService,
   ) {
-    this.id = this.activatedRoute.snapshot.params['id'];
     this.loadingService.isLoading = true;
+    this.state.id = this.activatedRoute.snapshot.params['id'];
     this.load();
   }
 
   load(): void {
+    this.state.reset();
     this.getSub = zip(
       this.firebaseService.getSettings(),
       this.getMilestone(),
+      this.firebaseService.getInvoiceList()
     ).subscribe(data => {
       this.getSub.unsubscribe();
-      this.loadSettings(data[0]);
-      this.loadMilestone(data[1]);
-      if (this.isCurrent) {
-        this.calculate();
+      if (!data || !data[0] || !data[1]) {
+        this.notificationService.crash('Bad data from the DB');
       } else {
-        this.getSub = this.firebaseService.getInvoice(this.id).subscribe(invoice => {
-          this.getSub.unsubscribe();
-          this.invoice = invoice;
-          this.calculate();
-        });
+        this.loadSettings(data[0]);
+        this.loadMilestone(data[1]);
+        this.loadInvoices(data[2]);
+        this.calculate();
       }
     });
   }
 
   getMilestone(): Observable<Proto.Milestone> {
-    this.isCurrent = this.id === 'current';
-    if (this.isCurrent) {
+    this.state.isCurrent = this.state.id === 'current';
+    if (this.state.isCurrent) {
       return this.firebaseService.getMilestone();
     } else {
-      return this.firebaseService.getEndedMilestone(this.id);
+      return this.firebaseService.getEndedMilestone(this.state.id);
     }
   }
 
   loadMilestone(milestone: Proto.Milestone): void {
-    this.protoMilestone = milestone;
+    this.state.pm = milestone;
   }
 
   loadSettings(settings: Proto.Settings): void {
-    this.settings = settings;
-    this.milestone.label = this.settings.getCryptocurrency();
+    this.state.settings = settings;
+    this.state.milestone.label = this.state.settings.getCrypto();
   }
 
-  readMilestone(price: number): void {
-    this.price = Math.round(price);
-    this.milestone.started = timestampToTimeDate(this.protoMilestone.getStartedMs());
-    if (!this.isCurrent) {
-      const duration = this.protoMilestone.getEndedMs() - this.protoMilestone.getStartedMs();
-      this.milestone.duration = timestampToDays(duration);
-      this.milestone.ended = timestampToTimeDate(this.protoMilestone.getEndedMs());
-      this.milestone.rate = this.invoice.getRate();
-      const tracked: number = this.invoice.getDurationMs();
-      this.milestone.tracked = timestampToTime(tracked);
-      const hours: number = tracked / HOUR;
-      this.milestone.usd = Math.round(this.invoice.getRate() * hours);
-      this.milestone.status = getStatus(
-        tracked,
-        this.protoMilestone.getStartedMs(),
-        this.protoMilestone.getEndedMs(),
-        this.settings.getLimit(),
-      );
-      this.createHours(this.protoMilestone.getStartedMs(), this.protoMilestone.getEndedMs());
-    } else {
-      this.milestone.duration = timestampToDays(Date.now() - this.protoMilestone.getStartedMs());
-      const tracked: number = this.countTrackedTime();
-      const hours: number = tracked / HOUR;
-      this.milestone.usd = Math.round(this.settings.getRate() * hours);
-      this.milestone.crypto = cround(this.settings.getRate() * hours / price, this.milestone.label);
-      this.milestone.ended = '-';
-      this.milestone.rate = this.settings.getRate();
-      this.milestone.status = getStatus(
-        tracked, this.protoMilestone.getStartedMs(), Date.now(), this.settings.getLimit()
-      );
-      this.createHours(this.protoMilestone.getStartedMs(), Date.now());
-    }
+  loadInvoices(invoices: Proto.Invoice[]): void {
+    let i = 1;
+    this.state.invoices = invoices
+      .filter(v => v.getMilestoneId() === this.state.pm.getId())
+      .map(v => false || {
+        label: addZero(i++),
+        url: '/invoice/' + v.getId(),
+        proto: v
+      });
+  }
+
+  action(): void {
+    this.matDialog.open(ContextDialogComponent, { panelClass: 'context-dialog' })
+      .afterClosed().subscribe(res => {
+        switch (res) {
+          case 'end': this.invoiceService.askToEnd(true, () => this.load()); break;
+          case 'reset': this.invoiceService.askToEnd(false, () => this.load()); break;
+          case 'add': {
+            this.loadingService.isLoading = true;
+            this.invoiceService.saveBackup('backup-invoice');
+            this.firebaseService.setInvoice(this.invoiceService.getNewInvoice(Date.now()))
+              .subscribe(() => this.load());
+            break;
+          }
+        }
+      });
   }
 
   calculate(): void {
     this.loadingService.isLoading = true;
     this.isRatesError = false;
-    calculate(this.settings.getCryptocurrency()).subscribe(price => {
-      this.readMilestone(price);
-      this.loadingService.isLoading = false;
-    }, () => {
-      this.notificationService.error('Invalid cryptocurrency rates');
-      this.readMilestone(1);
-      this.isRatesError = true;
-      this.loadingService.isLoading = false;
+    calculate(this.state.settings.getCrypto()).subscribe({
+      next: price => {
+        this.milestoneService.readMilestone(price);
+        this.loadingService.isLoading = false;
+      },
+      error: () => {
+        this.notificationService.error('Invalid cryptocurrency rates');
+        this.milestoneService.readMilestone(1);
+        this.isRatesError = true;
+        this.loadingService.isLoading = false;
+      },
     });
-  }
-
-  countTrackedTime(): number {
-    let tracked: number = 0;
-    for (const bubble of this.protoMilestone.getBubbleList()) {
-      bubble.getSessionList().forEach(session => {
-        tracked += session.getEndedMs() - session.getStartedMs();
-      });
-    }
-    this.milestone.tracked = timestampToTime(tracked);
-    return tracked;
-  }
-
-  createHours(started: number, ended: number): void {
-    let ms: number;
-    const hours: Hour[] = [];
-    const startedDate = new Date(started);
-    ms = started -
-      startedDate.getHours() * HOUR -
-      startedDate.getMinutes() * MINUTE -
-      startedDate.getSeconds() * 1000 -
-      startedDate.getMilliseconds();
-    for (let i = 0; i < 9999; i++) {
-      const hour = new Hour();
-      hour.started = ms;
-      hours.push(hour);
-
-      const currentDate = new Date(ms);
-      if (
-        currentDate.getHours() === 5 ||
-        currentDate.getHours() === 11 ||
-        currentDate.getHours() === 17 ||
-        currentDate.getHours() === 23
-      ) {
-        hour.isQuarterEnd = true;
-      }
-      if (currentDate.getHours() === 23) {
-        hour.isDayEnd = true;
-      }
-      if (currentDate.getDay() === 0 && currentDate.getHours() === 23) {
-        hour.isWeekend = true;
-      }
-      if (ms >= ended && currentDate.getHours() === 23) {
-        hour.isLast = true;
-        break;
-      }
-      ms += HOUR;
-    }
-    this.applySessions(hours);
-    this.createActivity(hours);
-  }
-
-  applySessions(hours: Hour[]): void {
-    let i = 0;
-    for (const bubble of this.protoMilestone.getBubbleList()) {
-      this.bubbles.push({
-        label: addZero(++i),
-        url: '/bubble/' + this.id + '/' + i,
-      });
-      bubble.getSessionList().forEach(session => {
-        let start: number = session.getStartedMs();
-        for (const hour of hours) {
-          if (!hour.duration) {
-            hour.duration = 0;
-          }
-          const hourEnded: number = hour.started + HOUR;
-          if (hour.started <= start && start < hourEnded) {
-            if (hourEnded <= session.getEndedMs()) {
-              hour.duration += hourEnded - start;
-              start = hourEnded;
-            } else {
-              hour.duration += session.getEndedMs() - start;
-              break;
-            }
-          }
-        }
-      });
-    }
-  }
-
-  createActivity(hours: Hour[]): void {
-    this.activity = { weeks: [] };
-    let week = new Week();
-    let day = new Day();
-    const quarter: Six = { hours: [] };
-    week.hours = 0;
-    week.usd = 0;
-    for (const hour of hours) {
-      hour.hrs = this.getHour(hour);
-      quarter.hours.push(hour);
-      week.hours += hour.duration;
-      if (hour.isQuarterEnd) {
-        day.quarters.push({ hours: quarter.hours });
-        quarter.hours = [];
-      }
-      if (hour.isDayEnd) {
-        const date = new Date(hour.started);
-        day.label = date.toLocaleDateString('en-US', { weekday: 'long' });
-        day.date = timestampToDate(hour.started);
-        day.hrs = this.getDay(day);
-        week.days.push(day);
-        day = new Day();
-      }
-      if (hour.isWeekend || hour.isLast) {
-        week.hrs = timestampToTime(week.hours);
-        week.usd = week.hours / HOUR * 40;
-        week.usd = round(week.usd, 2);
-        this.activity.weeks.push(week);
-
-        week = new Week();
-        week.hours = 0;
-        week.usd = 0;
-      }
-
-      const progress = hour.duration / HOUR;
-      if (progress > 0) {
-        hour.progress = 0.2 + progress;
-        if (hour.progress > 1) {
-          hour.progress = 1;
-        }
-      } else {
-        hour.progress = 0;
-      }
-    }
-  }
-
-  getHour(hour: Hour): string {
-    return timestampToTime(hour.duration);
-  }
-
-  getDay(day: Day): string {
-    let duration = 0;
-    for (const six of day.quarters) {
-      for (const hour of six.hours) {
-        duration += hour.duration;
-      }
-    }
-    return timestampToTime(duration) + ' hrs';
   }
 
   ngOnDestroy() {
     this.getSub.unsubscribe();
+    this.state.destroy();
   }
 }

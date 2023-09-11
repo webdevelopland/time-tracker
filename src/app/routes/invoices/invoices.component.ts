@@ -4,6 +4,7 @@ import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
 import * as Proto from 'src/proto';
+import { HOUR, fee } from '@/core/functions';
 import { LoadingService, FirebaseService } from '@/core/services';
 
 interface Invoice {
@@ -79,13 +80,14 @@ export class InvoicesComponent implements OnDestroy {
         return bTime - aTime;
       })
       .map(invoice => {
-        const HOUR: number = 1000 * 60 * 60;
         const hours: number = invoice.getDurationMs() / HOUR;
         const time = invoice.getSignedMs() === 0 ? invoice.getEndedMs() : invoice.getSignedMs();
+        let total: number = invoice.getSettings().getRate() * hours;
+        total = fee(total, invoice.getSettings().getFeeP(), invoice.getSettings().getFeeC());
         return {
           id: invoice.getId(),
           timestamp: time,
-          totalPrice: Math.round(invoice.getRate() * hours),
+          totalPrice: Math.round(total),
           isPaid: invoice.getSignedMs() !== 0,
         };
       });

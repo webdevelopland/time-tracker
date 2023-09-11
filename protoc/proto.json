@@ -1,7 +1,7 @@
 {
   "exportPath": "src/proto",
   "protoList": [
-    "protoc/tracker.proto",
+    "protoc/milestone.proto",
     "protoc/settings.proto",
     "protoc/invoice.proto"
   ]

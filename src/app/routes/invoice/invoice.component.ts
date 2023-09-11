@@ -1,15 +1,16 @@
 import { Component, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Subscription, zip } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, timer } from 'rxjs';
 import { jsPDF } from 'jspdf';
 
 import * as Proto from 'src/proto';
 import {
   round, cround,
-  timestampToTime,
+  timestampToDuration,
   timestampToDate,
   timestampToTimeDate,
   calculate,
+  HOUR, WEEK
 } from '@/core/functions';
 import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 
@@ -23,7 +24,7 @@ interface Invoice {
   totalUsd?: number;
   before: string;
   label: string; // E.g. LTC
-  from?: string;
+  billFrom?: string;
   billTo?: string;
   address?: string;
   feeP?: number;
@@ -36,8 +37,6 @@ interface PDF {
   y: number;
 }
 
-const HOUR: number = 1000 * 60 * 60;
-
 @Component({
   selector: 'page-invoice',
   templateUrl: './invoice.component.html',
@@ -47,7 +46,6 @@ export class InvoiceComponent implements OnDestroy {
   id: string;
   invoice: Invoice;
   protoInvoice: Proto.Invoice;
-  settings: Proto.Settings;
   price: number;
   total: number;
   sent: string;
@@ -55,8 +53,10 @@ export class InvoiceComponent implements OnDestroy {
   isLoading: boolean = false;
   getSub = new Subscription();
   setSub = new Subscription();
+  timerSub = new Subscription();
 
   constructor(
+    private router: Router,
     public activatedRoute: ActivatedRoute,
     public loadingService: LoadingService,
     public firebaseService: FirebaseService,
@@ -70,64 +70,55 @@ export class InvoiceComponent implements OnDestroy {
   loadInvoice(invoice: Proto.Invoice): void {
     if (invoice) {
       this.protoInvoice = invoice;
+      const settings: Proto.Settings = invoice.getSettings();
       const hours: number = invoice.getDurationMs() / HOUR;
-      const totalUsd: number = invoice.getRate() * hours;
-      const WEEK: number = HOUR * 24 * 7;
+      const totalBeforeFee: number = settings.getRate() * hours;
       this.invoice = {
         id: invoice.getId(),
         started: timestampToDate(invoice.getStartedMs()),
         ended: timestampToDate(invoice.getEndedMs()),
-        duration: timestampToTime(invoice.getDurationMs()),
-        rate: invoice.getRate(),
-        totalBeforeFee: round(totalUsd, 2),
+        duration: timestampToDuration(invoice.getDurationMs()),
+        rate: settings.getRate(),
+        totalBeforeFee: round(totalBeforeFee, 2),
         before: timestampToDate(invoice.getEndedMs() + WEEK),
-        label: invoice.getCryptocurrency(),
+        label: settings.getCrypto(),
       };
-      this.invoice.totalUsd = this.invoice.totalBeforeFee;
-      if (invoice.getFeeP() || invoice.getFeeC()) {
-        if (invoice.getFeeP()) {
-          this.invoice.feeP = invoice.getFeeP();
-          this.invoice.totalUsd *= 1 - this.invoice.feeP/100;
-        }
-        if (invoice.getFeeC()) {
-          this.invoice.feeC = invoice.getFeeC();
-          this.invoice.totalUsd -= this.invoice.feeC;
-        }
-        this.invoice.totalUsd = round(this.invoice.totalUsd, 2);
-        if (this.invoice.totalUsd <= 0) {
-          this.invoice.totalUsd = 0;
-          this.notificationService.warning('Total is too small');
-        }
+      this.invoice.totalUsd = totalBeforeFee;
+      if (settings.getFeeP()) {
+        this.invoice.feeP = settings.getFeeP();
+        this.invoice.totalUsd *= 1 - this.invoice.feeP / 100;
       }
+      if (settings.getFeeC()) {
+        this.invoice.feeC = settings.getFeeC();
+        this.invoice.totalUsd -= this.invoice.feeC;
+      }
+      this.invoice.totalUsd = round(this.invoice.totalUsd, 2);
+      if (this.invoice.totalUsd <= 0) {
+        this.invoice.totalUsd = 0;
+        this.notificationService.warning('Total is too small');
+      }
+
+      this.invoice.billFrom = settings.getBillFrom();
+      this.invoice.billTo = settings.getBillTo();
+      this.invoice.address = settings.getAddress();
       if (invoice.getSignedMs() !== 0) {
-        this.invoice.from = invoice.getFrom();
-        this.invoice.billTo = invoice.getBillTo();
-        this.invoice.address = invoice.getAddress();
         this.updatePrice(invoice.getCryptoPrice());
         this.sent = timestampToTimeDate(invoice.getSignedMs());
         this.isSent = true;
       } else {
-        this.invoice.from = this.settings.getName();
-        this.invoice.billTo = this.settings.getBillTo();
-        this.invoice.address = this.settings.getWallet();
         this.calculate();
       }
+      this.loadingService.isLoading = false;
+    } else {
+      this.notificationService.warning('Invoice not found');
+      this.router.navigate(['/invoices']);
     }
   }
 
-  loadSettings(settings: Proto.Settings): void {
-    this.settings = settings;
-  }
-
   load(): void {
-    this.getSub = zip(
-      this.firebaseService.getSettings(),
-      this.firebaseService.getInvoice(this.id),
-    ).subscribe(data => {
+    this.getSub = this.firebaseService.getInvoice(this.id).subscribe(invoice => {
       this.getSub.unsubscribe();
-      this.loadSettings(data[0]);
-      this.loadInvoice(data[1]);
-      this.loadingService.isLoading = false;
+      this.loadInvoice(invoice);
     });
   }
 
@@ -138,9 +129,15 @@ export class InvoiceComponent implements OnDestroy {
 
   calculate(): void {
     this.isLoading = true;
+    this.timerSub.unsubscribe();
+    const start: number = Date.now();
     calculate(this.invoice.label).subscribe(price => {
       this.updatePrice(price);
-      this.isLoading = false;
+      if ((Date.now() - start) < 300) {
+        this.timerSub = timer(300).subscribe(() => this.isLoading = false);
+      } else {
+        this.isLoading = false;
+      }
     }, () => {
       this.notificationService.error('Invalid cryptocurrency rates');
     });
@@ -150,9 +147,6 @@ export class InvoiceComponent implements OnDestroy {
     const now: number = Date.now();
     this.sent = timestampToTimeDate(now);
     this.isSent = true;
-    this.protoInvoice.setAddress(this.invoice.address);
-    this.protoInvoice.setFrom(this.invoice.from);
-    this.protoInvoice.setBillTo(this.invoice.billTo);
     this.protoInvoice.setCryptoPrice(this.price);
     this.protoInvoice.setSignedMs(now);
     this.setSub = this.firebaseService.setInvoice(this.protoInvoice).subscribe();
@@ -163,7 +157,7 @@ export class InvoiceComponent implements OnDestroy {
     let y: number = 180;
     const step = 27;
     pdfList.push({
-      label: 'Milestone:',
+      label: 'Period:',
       value: this.invoice.started + ' - ' + this.invoice.ended,
       y: y
     }); y += step;
@@ -237,7 +231,7 @@ export class InvoiceComponent implements OnDestroy {
     doc.text('Web Development', 130, 140);
 
     doc.text('From:', 465, 112);
-    doc.text(this.invoice.from, 515, 112);
+    doc.text(this.invoice.billFrom, 515, 112);
     doc.text('Bill to:', 465, 140);
     doc.text(this.invoice.billTo, 515, 140);
 
@@ -263,5 +257,6 @@ export class InvoiceComponent implements OnDestroy {
   ngOnDestroy() {
     this.getSub.unsubscribe();
     this.setSub.unsubscribe();
+    this.timerSub.unsubscribe();
   }
 }
