@@ -2,7 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import * as Proto from 'src/proto';
-import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
+import { LoadingService, FirebaseService, NotificationService, AuthService } from '@/core/services';
 
 @Component({
   selector: 'page-settings',
@@ -12,17 +12,18 @@ import { LoadingService, FirebaseService, NotificationService } from '@/core/ser
 export class SettingsComponent implements OnDestroy {
   limit: number;
   rate: number;
-  currency: string;
+  crypto: string;
   address: string;
   feeP: number;
   feeC: number;
-  name: string;
+  billFrom: string;
   billTo: string;
   getSub = new Subscription();
   setSub = new Subscription();
 
   constructor(
     public loadingService: LoadingService,
+    public authService: AuthService,
     private firebaseService: FirebaseService,
     private notificationService: NotificationService,
   ) {
@@ -36,11 +37,11 @@ export class SettingsComponent implements OnDestroy {
       if (settings) {
         this.limit = settings.getLimit();
         this.rate = settings.getRate();
-        this.currency = settings.getCryptocurrency();
-        this.address = settings.getWallet();
+        this.crypto = settings.getCrypto();
+        this.address = settings.getAddress();
         this.feeP = settings.getFeeP();
         this.feeC = settings.getFeeC();
-        this.name = settings.getName();
+        this.billFrom = settings.getBillFrom();
         this.billTo = settings.getBillTo();
       }
       this.loadingService.isLoading = false;
@@ -50,12 +51,12 @@ export class SettingsComponent implements OnDestroy {
   save(): void {
     const settings = new Proto.Settings();
     settings.setLimit(this.limit);
-    settings.setWallet(this.address);
-    settings.setCryptocurrency(this.currency);
+    settings.setAddress(this.address);
+    settings.setCrypto(this.crypto);
     settings.setFeeP(this.feeP);
     settings.setFeeC(this.feeC);
     settings.setRate(this.rate);
-    settings.setName(this.name);
+    settings.setBillFrom(this.billFrom);
     settings.setBillTo(this.billTo);
     this.setSub = this.firebaseService.setSettings(settings).subscribe(() => {
       this.notificationService.success('Saved');

@@ -7,18 +7,16 @@ import * as Proto from 'src/proto';
 import {
   timestampToDays,
   timestampToDate,
-  timestampToTime,
-  getTimestampTime,
+  timestampToDuration,
+  getTimestampDuration,
   getStatus,
+  HOUR, DAY
 } from '@/core/functions';
-import { LoadingService, FirebaseService } from '@/core/services';
+import { LoadingService, FirebaseService, AuthService, NotificationService } from '@/core/services';
 
 interface Point {
   x: number, y: number;
 }
-
-const HOUR = 1000 * 60 * 60;
-const DAY = HOUR * 24;
 
 @Component({
   selector: 'page-chart',
@@ -33,12 +31,15 @@ export class ChartComponent implements OnDestroy {
   chartLimit: Chart;
   chartTracked: Chart;
   step: string = '4';
+  invoices: Proto.Invoice[];
   getSub = new Subscription();
 
   constructor(
     public loadingService: LoadingService,
     public activatedRoute: ActivatedRoute,
     private firebaseService: FirebaseService,
+    private notificationService: NotificationService,
+    public authService: AuthService,
   ) {
     this.loadingService.isLoading = false;
     this.id = this.activatedRoute.snapshot.params['id'];
@@ -49,12 +50,20 @@ export class ChartComponent implements OnDestroy {
     this.getSub = zip(
       this.firebaseService.getSettings(),
       this.getMilestone(),
+      this.firebaseService.getInvoiceList()
     ).subscribe(data => {
       this.getSub.unsubscribe();
-      this.loadSettings(data[0]);
-      this.loadMilestone(data[1]);
-      this.readTracked();
-      this.readLimit();
+      if (!data || !data[0] || !data[1]) {
+        this.notificationService.crash('Bad data from the DB');
+      } else {
+        this.loadSettings(data[0]);
+        this.loadMilestone(data[1]);
+        this.loadInvoices(data[2]);
+        if (this.protoMilestone.getBubbleList().length > 0) {
+          this.readTracked();
+          this.readLimit();
+        }
+      }
     });
   }
 
@@ -75,11 +84,18 @@ export class ChartComponent implements OnDestroy {
     this.settings = settings;
   }
 
+  loadInvoices(invoices: Proto.Invoice[]): void {
+    this.invoices = invoices.filter(v => v.getMilestoneId() === this.protoMilestone.getId());
+  }
+
   readTracked(cb?: Function): void {
     let tracked: number = 0;
     let ended: number;
     const points: Point[] = [{ x: this.protoMilestone.getStartedMs(), y: 0 }];
     this.protoMilestone.getBubbleList().forEach(bubble => {
+      if (bubble.getSessionList().length === 0) {
+        return;
+      }
       tracked += this.getTrackedTime(bubble);
       ended = this.getLastSessionEnd(bubble);
       points.push({ x: ended, y: tracked });
@@ -100,6 +116,9 @@ export class ChartComponent implements OnDestroy {
     let ended: number;
     const points: Point[] = [{ x: this.protoMilestone.getStartedMs(), y: 0 }];
     this.protoMilestone.getBubbleList().forEach(bubble => {
+      if (bubble.getSessionList().length === 0) {
+        return;
+      }
       tracked += this.getTrackedTime(bubble);
       ended = this.getLastSessionEnd(bubble);
       if (ended - this.protoMilestone.getStartedMs() > DAY) {
@@ -126,13 +145,21 @@ export class ChartComponent implements OnDestroy {
       tracked,
       this.protoMilestone.getStartedMs(),
       x,
-      this.settings.getLimit(),
+      this.getLimit(),
     );
     if (status > max) {
       max = Math.ceil(status + 10);
     }
     points.push({ x: x, y: status });
     return max;
+  }
+
+  getLimit(): number {
+    if (this.isCurrent) {
+      return this.settings.getLimit();
+    } else {
+      return this.invoices[this.invoices.length - 1].getSettings().getLimit();
+    }
   }
 
   getTrackedTime(bubble: Proto.Bubble): number {
@@ -215,7 +242,7 @@ export class ChartComponent implements OnDestroy {
           },
           y: {
             ticks: {
-              callback: (value: number) => getTimestampTime(value).hours + ' hrs'
+              callback: (value: number) => getTimestampDuration(value).hours + ' hrs'
             }
           }
         },
@@ -225,7 +252,7 @@ export class ChartComponent implements OnDestroy {
               label: data => {
                 const date: string = timestampToDate(data.parsed.x);
                 const days: string = timestampToDays(data.parsed.x - xmin);
-                const time: string = timestampToTime(data.parsed.y);
+                const time: string = timestampToDuration(data.parsed.y);
                 return `${time}, ${date}, ${days}`;
               }
             }

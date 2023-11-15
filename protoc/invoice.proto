@@ -1,20 +1,17 @@
 syntax = "proto3";
 
-package wakka.common.invoice;
+package invoice;
+
+import "settings.proto";
 
 message Invoice {
-  string id = 1;
-  int64 started_ms = 2;
-  int64 ended_ms = 3;
-  int64 signed_ms = 4;
-  int64 duration_ms = 5;
-  float rate = 6; // $ per hour
-  double crypto_price = 7; // USD/LTC rate
-  string stable = 8; // Currency label. E.g. "USD"
-  string cryptocurrency = 9; // Currency label. E.g. "LTC"
-  string address = 10; // LTC address to get payments
-  string from = 11;
-  string bill_to = 12;
-  float fee_p = 13; // % fee
-  float fee_c = 14; // $ fee
+  string id = 1; // ID of the invoice
+  string milestone_id = 2; // A milestone could have several invoices
+  int32 index = 3; // First, second, third, etc...
+  int64 started_ms = 4; // Invoice period started
+  int64 ended_ms = 5; // Invoice period ended
+  int64 signed_ms = 6; // When the invoice was actually paid
+  int64 duration_ms = 7; // Amount of ms tracked
+  double crypto_price = 8; // How much Crypto costs in Stable (e.g. USD/LTC rate)
+  settings.Settings settings = 9;
 }

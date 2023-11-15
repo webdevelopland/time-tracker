@@ -10,9 +10,9 @@ import { AuthService, LoadingService } from '@/core/services';
 export class MenuComponent {
   constructor(
     private authService: AuthService,
-    private LoadingService: LoadingService,
+    private loadingService: LoadingService,
   ) {
-    this.LoadingService.isLoading = false;
+    this.loadingService.isLoading = false;
   }
 
   logOut(): void {

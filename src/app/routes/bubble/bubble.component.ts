@@ -5,10 +5,10 @@ import { Observable, Subscription } from 'rxjs';
 import * as Proto from 'src/proto';
 import { Session } from '@/core/type';
 import {
-  timestampToTime,
+  timestampToDuration,
   getSessions
 } from '@/core/functions';
-import { LoadingService, FirebaseService } from '@/core/services';
+import { LoadingService, FirebaseService, NotificationService } from '@/core/services';
 
 @Component({
   selector: 'page-bubble',
@@ -27,8 +27,9 @@ export class BubbleComponent implements OnDestroy {
     public loadingService: LoadingService,
     public activatedRoute: ActivatedRoute,
     private firebaseService: FirebaseService,
+    private notificationService: NotificationService,
   ) {
-    this.loadingService.isLoading = false;
+    this.loadingService.isLoading = true;
     this.id = this.activatedRoute.snapshot.params['id'];
     this.n = +this.activatedRoute.snapshot.params['n'];
     this.load();
@@ -37,8 +38,13 @@ export class BubbleComponent implements OnDestroy {
   load(): void {
     this.getSub = this.getMilestone().subscribe(milestone => {
       this.getSub.unsubscribe();
-      this.bubble = milestone.getBubbleList()[this.n - 1];
-      this.readBubble();
+      if (!milestone || milestone.getBubbleList().length < this.n) {
+        this.notificationService.crash('Bad data from the DB');
+      } else {
+        this.bubble = milestone.getBubbleList()[this.n - 1];
+        this.readBubble();
+        this.loadingService.isLoading = false;
+      }
     });
   }
 
@@ -56,7 +62,7 @@ export class BubbleComponent implements OnDestroy {
       const sessionDuration = session.getEndedMs() - session.getStartedMs();
       duration += sessionDuration;
     });
-    this.bubbleTime = timestampToTime(duration);
+    this.bubbleTime = timestampToDuration(duration);
     this.sessions = getSessions(this.bubble);
   }
 

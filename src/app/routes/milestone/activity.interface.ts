@@ -1,3 +1,5 @@
+import * as Proto from 'src/proto';
+
 export interface Activity {
   weeks: Week[];
 }
@@ -39,6 +41,7 @@ export class Milestone {
   tracked: string;
   rate: number;
   usd: number;
+  left: number;
   crypto: number;
   label: string;
   status: number;
@@ -47,4 +50,10 @@ export class Milestone {
 export interface Bubble {
   label: string;
   url: string;
+}
+
+export interface Invoice {
+  label: string;
+  url: string;
+  proto: Proto.Invoice;
 }

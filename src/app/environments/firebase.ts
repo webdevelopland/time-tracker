@@ -5,4 +5,5 @@ export const config = {
   storageBucket: 'crypto-time-tracker.appspot.com',
   messagingSenderId: '783330468241',
   appId: '1:783330468241:web:b807c0aed1446670053a30',
+  uid: 'lFvbl1K38lT4Vrd8h1M5sCScS5t1',
 };

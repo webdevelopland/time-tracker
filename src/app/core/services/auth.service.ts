@@ -4,11 +4,14 @@ import { Router } from '@angular/router';
 import { Observable, ReplaySubject } from 'rxjs';
 import { GoogleAuthProvider } from 'firebase/auth';
 
+import { config } from '@/environments/firebase';
+
 @Injectable()
 export class AuthService {
   isOnline: boolean;
   isInit: boolean = false;
-  email: string;
+  isAdmin: boolean = false;
+  uid: string;
   onlineChanges = new ReplaySubject<boolean>(1);
 
   constructor(
@@ -19,7 +22,8 @@ export class AuthService {
       this.isInit = true;
       this.isOnline = !!userData && !!userData.email;
       if (this.isOnline) {
-        this.email = userData.email;
+        this.uid = userData.uid;
+        this.isAdmin = this.uid === config.uid;
       } else {
         this.router.navigate(['/']);
       }
