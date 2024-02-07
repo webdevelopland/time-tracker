@@ -58,6 +58,7 @@ export class SettingsComponent implements OnDestroy {
     settings.setRate(this.rate);
     settings.setBillFrom(this.billFrom);
     settings.setBillTo(this.billTo);
+    settings.setStable('USD');
     this.setSub = this.firebaseService.setSettings(settings).subscribe(() => {
       this.notificationService.success('Saved');
     }, () => {
